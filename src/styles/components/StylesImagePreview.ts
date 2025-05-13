@@ -1,9 +1,18 @@
 import { StyleSheet } from 'react-native';
 
 export const stylesImagePreview = StyleSheet.create({
-    imagePreviewContainer: {
+    imagePreviewScrollViewContainer: {
         marginTop: 10,
         flexDirection: 'row',
+        width: '100%',
+        marginRight: 20,
+    },
+
+    imagePreviewContainer: {
+        height: 120,
+
+        width: '100%',
+        gap: 10,
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -19,9 +28,9 @@ export const stylesImagePreview = StyleSheet.create({
 
     deleteButton: {
         position: 'absolute',
-        top: -5,
+        top: 5,
         right: 0,
-        backgroundColor: 'rgb(255, 255, 255)',
+        backgroundColor: 'rgb(227, 85, 85)',
         borderRadius: 20,
         padding: 0,
         alignItems: 'center',

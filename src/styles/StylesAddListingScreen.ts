@@ -105,4 +105,15 @@ export const stylesAddListingScreen = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
     },
+
+    errorText: {
+        color: 'red',
+        fontSize: 12,
+        marginTop: 5,
+    },
+
+    imageScrollView: {
+        flexDirection: 'row',
+        marginTop: 10,
+    },
 });
