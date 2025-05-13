@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, TextInput, Image } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, Image, ScrollView, TouchableWithoutFeedback, Keyboard, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { stylesAddListingScreen } from '../styles/StylesAddListingScreen';
 import { useNavigation } from '@react-navigation/native';
@@ -8,6 +8,8 @@ import { Formik } from 'formik';
 import * as Yup from 'yup';
 import * as ImagePicker from 'expo-image-picker';
 import ImagePreview from '../components/ImagePreview';
+import { validationSchema } from '../validation/ValidationSchema';
+import { useListings } from '../context/ListingContext';
 
 
 type RootStackParamList = {
@@ -21,16 +23,30 @@ type FormValues = {
     date: string;
     time: string;
     location: string;
-    image: string;
+    images: string[];
 };
 
 const AddListingScreen = () => {
     const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+    const { addListing } = useListings();
 
     const handleSubmit = (values: FormValues) => {
-        console.log("submitted");
+        addListing(values);
+        Alert.alert(
+            "Success",
+            "Your listing has been added successfully!",
+            [
+                {
+                    text: "OK",
+                    onPress: () => {
+                        navigation.navigate('Home');
+                    }
+                }
+            ]
+        );
     };
 
+    
     return (
         <View style={stylesAddListingScreen.mainContainer}>
             <View style={stylesAddListingScreen.headerContainer}>
@@ -52,100 +68,145 @@ const AddListingScreen = () => {
                             date: '',
                             time: '',
                             location: '',
-                            image: '',
+                            images: [],
                         }}
-                        validationSchema={Yup.object().shape({
-                            name: Yup.string().required('Name is required'),
-                            description: Yup.string().required('Description is required'),
-                            date: Yup.string().required('Date is required'),
-                            time: Yup.string().required('Time is required'),
-                            location: Yup.string().required('Location is required'),
-                            image: Yup.string().required('Image is required'),
-                        })}
-                        onSubmit={(values) => {
+                        validationSchema={validationSchema}
+                        onSubmit={(values, { resetForm }) => {
                             handleSubmit(values);
+                            resetForm({
+                                values: {
+                                    name: '',
+                                    description: '',
+                                    date: '',
+                                    time: '',
+                                    location: '',
+                                    images: [],
+                                }
+                            });
                         }}
                     >
-                        {({ handleChange, handleBlur, handleSubmit, values, errors, setFieldValue }) => {
+                        {({ handleChange, handleBlur, handleSubmit, values, errors, setFieldValue, resetForm }) => {
                             const pickImageAsync = async () => {
+                                if (values.images.length >= 5) {
+                                    alert('Maximum 5 images allowed');
+                                    return;
+                                }
+
                                 let result = await ImagePicker.launchImageLibraryAsync({
                                     allowsEditing: true,
                                     quality: 1,
                                 });
 
                                 if (!result.canceled) {
-                                    setFieldValue('image', result.assets[0].uri);
+                                    setFieldValue('images', [...values.images, result.assets[0].uri]);
                                 }
                             };
 
+                            const removeImage = (index: number) => {
+                                const newImages = [...values.images];
+                                newImages.splice(index, 1);
+                                setFieldValue('images', newImages);
+                            };
+
                             return (
-                                <View style={stylesAddListingScreen.form}>
-                                    <View style={stylesAddListingScreen.formRow}>
-                                        <Text style={stylesAddListingScreen.label}>Name</Text>
-                                        <TextInput
-                                            style={stylesAddListingScreen.input}
-                                            placeholder="Name"
-                                            onChangeText={handleChange('name')}
-                                            onBlur={handleBlur('name')}
-                                        />
-                                    </View>
-                                    <View style={stylesAddListingScreen.formRow}>
-                                        <Text style={stylesAddListingScreen.label}>Description</Text>
-                                        <TextInput
-                                            style={stylesAddListingScreen.input}
-                                            placeholder="Description"
-                                            onChangeText={handleChange('description')}
-                                            onBlur={handleBlur('description')}
-                                        />
-                                    </View>
-                                    <View style={stylesAddListingScreen.formRow}>
-                                        <Text style={stylesAddListingScreen.label}>Date</Text>
-                                        <TextInput
-                                            style={stylesAddListingScreen.input}
-                                            placeholder="Date"
-                                            onChangeText={handleChange('date')}
-                                            onBlur={handleBlur('date')}
-                                        />
-                                    </View>
-                                    <View style={stylesAddListingScreen.formRow}>
-                                        <Text style={stylesAddListingScreen.label}>Time</Text>
-                                        <TextInput
-                                            style={stylesAddListingScreen.input}
-                                            placeholder="Time"
-                                            onChangeText={handleChange('time')}
-                                            onBlur={handleBlur('time')}
-                                        />
-                                    </View>
-                                    <View style={stylesAddListingScreen.formRow}>
-                                        <Text style={stylesAddListingScreen.label}>Location</Text>
-                                        <TextInput
-                                            style={stylesAddListingScreen.input}
-                                            placeholder="Location"
-                                            onChangeText={handleChange('location')}
-                                            onBlur={handleBlur('location')}
-                                        />
-                                    </View>
-                                    <View style={stylesAddListingScreen.formRow}>
-                                        <Text style={stylesAddListingScreen.label}>Image</Text>
+                                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                                    <View style={stylesAddListingScreen.form}>
+                                        <View style={stylesAddListingScreen.formRow}>
+                                            <Text style={stylesAddListingScreen.label}>Name</Text>
+                                            <TextInput
+                                                style={stylesAddListingScreen.input}
+                                                placeholder="Name"
+                                                value={values.name}
+                                                onChangeText={handleChange('name')}
+                                                onBlur={handleBlur('name')}
+                                            />
+                                        </View>
+                                        <View style={stylesAddListingScreen.formRow}>
+                                            <Text style={stylesAddListingScreen.label}>Description</Text>
+                                            <TextInput
+                                                style={stylesAddListingScreen.input}
+                                                placeholder="Description"
+                                                value={values.description}
+                                                onChangeText={handleChange('description')}
+                                                onBlur={handleBlur('description')}
+                                            />
+                                        </View>
+                                        <View style={stylesAddListingScreen.formRow}>
+                                            <Text style={stylesAddListingScreen.label}>Date</Text>
+                                            <TextInput
+                                                style={stylesAddListingScreen.input}
+                                                placeholder="Date"
+                                                value={values.date}
+                                                onChangeText={handleChange('date')}
+                                                onBlur={handleBlur('date')}
+                                            />
+                                        </View>
+                                        <View style={stylesAddListingScreen.formRow}>
+                                            <Text style={stylesAddListingScreen.label}>Time</Text>
+                                            <TextInput
+                                                style={stylesAddListingScreen.input}
+                                                placeholder="Time"
+                                                value={values.time}
+                                                onChangeText={handleChange('time')}
+                                                onBlur={handleBlur('time')}
+                                            />
+                                        </View>
+                                        <View style={stylesAddListingScreen.formRow}>
+                                            <Text style={stylesAddListingScreen.label}>Location</Text>
+                                            <TextInput
+                                                style={stylesAddListingScreen.input}
+                                                placeholder="Location"
+                                                value={values.location}
+                                                onChangeText={handleChange('location')}
+                                                onBlur={handleBlur('location')}
+                                            />
+                                        </View>
+                                        <View style={stylesAddListingScreen.formRow}>
+                                            <Text style={stylesAddListingScreen.label}>Images ({values.images.length}/5)</Text>
+                                            <TouchableOpacity
+                                                style={stylesAddListingScreen.imageInput}
+                                                onPress={pickImageAsync}
+                                            >
+                                                <Text style={stylesAddListingScreen.imageInputText}>
+                                                    {values.images.length === 0 ? 'Select images' : 'Add more images'}
+                                                </Text>
+                                            </TouchableOpacity>
+                                            
+                                            <ScrollView 
+                                                horizontal 
+                                                showsHorizontalScrollIndicator={false}
+                                                style={stylesAddListingScreen.imageScrollView}
+                                            >
+                                                {values.images.map((image, index) => (
+                                                    <ImagePreview 
+                                                        key={index}
+                                                        image={image} 
+                                                        onDelete={() => removeImage(index)}
+                                                    />
+                                                ))}
+                                            </ScrollView>
+                                            
+                                            {errors.images && (
+                                                <Text style={stylesAddListingScreen.errorText}>{errors.images}</Text>
+                                            )}
+                                        </View>
                                         <TouchableOpacity
-                                            style={stylesAddListingScreen.imageInput}
-                                            onPress={pickImageAsync}
+                                            style={stylesAddListingScreen.submitButton}
+                                            onPress={() => {
+                                                if (Object.keys(errors).length === 0) {
+                                                    handleSubmit();
+                                                } else {
+                                                    Alert.alert(
+                                                        "Validation Error",
+                                                        "Please fill in all required fields correctly."
+                                                    );
+                                                }
+                                            }}
                                         >
-                                            <Text style={stylesAddListingScreen.imageInputText}>{values.image ? 'Change image' : 'Select image'}</Text>
+                                            <Text style={stylesAddListingScreen.submitButtonText}>Submit</Text>
                                         </TouchableOpacity>
-                                        
-                                        {values.image && (
-                                            <ImagePreview image={values.image} />
-                                        )}
-                                        
                                     </View>
-                                    <TouchableOpacity
-                                        style={stylesAddListingScreen.submitButton}
-                                        onPress={() => handleSubmit()}
-                                    >
-                                        <Text style={stylesAddListingScreen.submitButtonText}>Submit</Text>
-                                    </TouchableOpacity>
-                                </View>
+                                </TouchableWithoutFeedback>
                             );
                         }}
                     </Formik>

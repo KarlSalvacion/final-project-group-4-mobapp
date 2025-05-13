@@ -1,22 +1,18 @@
 import { StatusBar } from 'expo-status-bar';
-import { SafeAreaView, } from 'react-native';
+import { SafeAreaView } from 'react-native';
 import { stylesGlobal } from './styles/StylesGlobal';
 import AppNavigator from './navigation/AppNavigator';
-import { NavigationContainer } from '@react-navigation/native';
-
-const AppContent = () => {
-  return (
-    <SafeAreaView style={stylesGlobal.mainContainer}>
-      <StatusBar style="auto" />
-        <AppNavigator />
-    </SafeAreaView>
-  );
-}
+import { ListingProvider } from './context/ListingContext';
 
 export default function App() {
   return (
-    <AppContent />
+    <ListingProvider>
+      <SafeAreaView style={stylesGlobal.mainContainer}>
+        <StatusBar style="auto" />
+        <AppNavigator />
+      </SafeAreaView>
+    </ListingProvider>
   );
-};
+}
 
 

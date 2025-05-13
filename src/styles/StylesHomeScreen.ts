@@ -21,17 +21,12 @@ export const stylesHomeScreen = StyleSheet.create({
     },
 
     profileButton: {
-        height: 40,
-        width: 40,
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: 'rgb(255, 255, 255)',
-        borderRadius: 20,
+        padding: 5,
     },
 
     profileIcon: {
-        color: 'rgb(25, 153, 100)',
         fontSize: 24,
+        color: '#fff',
     },
 
     contentContainer: {
@@ -41,7 +36,35 @@ export const stylesHomeScreen = StyleSheet.create({
         justifyContent: 'center',
     },
 
+    listContainer: {
+        padding: 16,
+        gap: 16,
+        width: 400,
+
+    },
+
+    emptyContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 10,
+    },
+
+    addListingText: {
+        color: 'rgb(255, 255, 255)',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    
+    emptyText: {
+        textAlign: 'center',
+        fontSize: 16,
+        color: '#666',
+        marginTop: 20,
+    },
+
     addListingButton: {
+        position: 'absolute',
+        bottom: 20,
         backgroundColor: 'rgb(25, 153, 100)',
         padding: 15,
         borderRadius: 20,
@@ -55,4 +78,7 @@ export const stylesHomeScreen = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
     },
+
+   
+
 });
