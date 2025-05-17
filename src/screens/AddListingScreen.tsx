@@ -1,12 +1,13 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, TextInput, Image, ScrollView, TouchableWithoutFeedback, Keyboard, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, TextInput, Image, ScrollView, TouchableWithoutFeedback, Keyboard, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { stylesAddListingScreen } from '../styles/StylesAddListingScreen';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { Formik } from 'formik';
+import { Formik, FormikHelpers } from 'formik';
 import * as Yup from 'yup';
 import * as ImagePicker from 'expo-image-picker';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import ImagePreview from '../components/ImagePreview';
 import { validationSchema } from '../validation/ValidationSchema';
 import { useListings } from '../context/ListingContext';
@@ -30,6 +31,8 @@ type FormValues = {
 const AddListingScreen = () => {
     const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
     const { addListing } = useListings();
+    const [showDatePicker, setShowDatePicker] = useState(false);
+    const [showTimePicker, setShowTimePicker] = useState(false);
 
     const handleSubmit = (values: FormValues) => {
         addListing(values);
@@ -45,6 +48,21 @@ const AddListingScreen = () => {
                 }
             ]
         );
+    };
+
+    const formatDate = (date: Date): string => {
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    };
+
+    const formatTime = (date: Date): string => {
+        return date.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
     };
 
     return (
@@ -66,7 +84,7 @@ const AddListingScreen = () => {
                     contentContainerStyle={{paddingBottom: 20}}
                 >
                     <View style={stylesAddListingScreen.formContainer}>
-                        <Formik
+                        <Formik<FormValues>
                             initialValues={{
                                 listingType: 'lost' as ListingType,
                                 name: '',
@@ -77,7 +95,7 @@ const AddListingScreen = () => {
                                 images: [],
                             }}
                             validationSchema={validationSchema}
-                            onSubmit={(values, { resetForm }) => {
+                            onSubmit={(values: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
                                 handleSubmit(values);
                                 resetForm({
                                     values: {
@@ -116,50 +134,55 @@ const AddListingScreen = () => {
                                 };
 
                                 return (
-                                    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                    
+                                    <KeyboardAvoidingView
+                                        style={stylesAddListingScreen.mainContainer}
+                                        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                                        keyboardVerticalOffset={Platform.OS === 'ios'? 80 : 0}
+                                    >
+                                        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                                             <View style={stylesAddListingScreen.form}>
                                                 <View style={stylesAddListingScreen.formRow}>
                                                     <Text style={stylesAddListingScreen.label}>Type</Text>
-                                                <View style={stylesAddListingScreen.typeToggleContainer}>
-                                                    <TouchableOpacity
-                                                        style={[
-                                                            stylesAddListingScreen.typeToggleButton,
-                                                            values.listingType === 'lost' 
-                                                                ? stylesAddListingScreen.typeToggleActive 
-                                                                : stylesAddListingScreen.typeToggleInactive
-                                                        ]}
-                                                        onPress={() => setFieldValue('listingType', 'lost')}
-                                                    >
-                                                        <Text style={[
-                                                            stylesAddListingScreen.typeToggleText,
-                                                            values.listingType === 'lost' 
-                                                                ? stylesAddListingScreen.typeToggleTextActive 
-                                                                : stylesAddListingScreen.typeToggleTextInactive
-                                                        ]}>
-                                                            Lost Item
-                                                        </Text>
-                                                    </TouchableOpacity>
-                                                    <TouchableOpacity
-                                                        style={[
-                                                            stylesAddListingScreen.typeToggleButton,
-                                                            values.listingType === 'found' 
-                                                                ? stylesAddListingScreen.typeToggleActive 
-                                                                : stylesAddListingScreen.typeToggleInactive
-                                                        ]}
-                                                        onPress={() => setFieldValue('listingType', 'found')}
-                                                    >
-                                                        <Text style={[
-                                                            stylesAddListingScreen.typeToggleText,
-                                                            values.listingType === 'found' 
-                                                                ? stylesAddListingScreen.typeToggleTextActive 
-                                                                : stylesAddListingScreen.typeToggleTextInactive
-                                                        ]}>
-                                                            Found Item
-                                                        </Text>
-                                                    </TouchableOpacity>
+                                                    <View style={stylesAddListingScreen.typeToggleContainer}>
+                                                        <TouchableOpacity
+                                                            style={[
+                                                                stylesAddListingScreen.typeToggleButton,
+                                                                values.listingType === 'lost' 
+                                                                    ? stylesAddListingScreen.typeToggleActive 
+                                                                    : stylesAddListingScreen.typeToggleInactive
+                                                            ]}
+                                                            onPress={() => setFieldValue('listingType', 'lost')}
+                                                        >
+                                                            <Text style={[
+                                                                stylesAddListingScreen.typeToggleText,
+                                                                values.listingType === 'lost' 
+                                                                    ? stylesAddListingScreen.typeToggleTextActive 
+                                                                    : stylesAddListingScreen.typeToggleTextInactive
+                                                            ]}>
+                                                                Lost Item
+                                                            </Text>
+                                                        </TouchableOpacity>
+                                                        <TouchableOpacity
+                                                            style={[
+                                                                stylesAddListingScreen.typeToggleButton,
+                                                                values.listingType === 'found' 
+                                                                    ? stylesAddListingScreen.typeToggleActive 
+                                                                    : stylesAddListingScreen.typeToggleInactive
+                                                            ]}
+                                                            onPress={() => setFieldValue('listingType', 'found')}
+                                                        >
+                                                            <Text style={[
+                                                                stylesAddListingScreen.typeToggleText,
+                                                                values.listingType === 'found' 
+                                                                    ? stylesAddListingScreen.typeToggleTextActive 
+                                                                    : stylesAddListingScreen.typeToggleTextInactive
+                                                            ]}>
+                                                                Found Item
+                                                            </Text>
+                                                        </TouchableOpacity>
+                                                    </View>
                                                 </View>
-                                                </View>
+
                                                 <View style={stylesAddListingScreen.formRow}>
                                                     <Text style={stylesAddListingScreen.label}>Name</Text>
                                                     <TextInput
@@ -180,25 +203,56 @@ const AddListingScreen = () => {
                                                         onBlur={handleBlur('description')}
                                                     />
                                                 </View>
-                                                <View style={stylesAddListingScreen.formRow}>
-                                                    <Text style={stylesAddListingScreen.label}>Date</Text>
-                                                    <TextInput
-                                                        style={stylesAddListingScreen.input}
-                                                        placeholder="Date"
-                                                        value={values.date}
-                                                        onChangeText={handleChange('date')}
-                                                        onBlur={handleBlur('date')}
-                                                    />
-                                                </View>
-                                                <View style={stylesAddListingScreen.formRow}>
-                                                    <Text style={stylesAddListingScreen.label}>Time</Text>
-                                                    <TextInput
-                                                        style={stylesAddListingScreen.input}
-                                                        placeholder="Time"
-                                                        value={values.time}
-                                                        onChangeText={handleChange('time')}
-                                                        onBlur={handleBlur('time')}
-                                                    />
+                                                <View style={stylesAddListingScreen.formRow2}>
+                                                    <View style={stylesAddListingScreen.dateContainer}>
+                                                        <Text style={stylesAddListingScreen.label}>Date</Text>
+                                                        <TouchableOpacity
+                                                            style={stylesAddListingScreen.input}
+                                                            onPress={() => setShowDatePicker(true)}
+                                                        >
+                                                            <Text style={stylesAddListingScreen.inputText}>
+                                                                {values.date || 'Select Date'}
+                                                            </Text>
+                                                        </TouchableOpacity>
+                                                        {showDatePicker && (
+                                                            <DateTimePicker
+                                                                value={values.date ? new Date(values.date) : new Date()}
+                                                                mode="date"
+                                                                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                                                onChange={(event, selectedDate) => {
+                                                                    setShowDatePicker(false);
+                                                                    if (selectedDate && event.type !== 'dismissed') {
+                                                                        setFieldValue('date', formatDate(selectedDate));
+                                                                    }
+                                                                }}
+                                                            />
+                                                        )}
+                                                    </View>
+
+                                                    <View style={stylesAddListingScreen.timeContainer}>
+                                                        <Text style={stylesAddListingScreen.label}>Time</Text>
+                                                        <TouchableOpacity
+                                                            style={stylesAddListingScreen.input}
+                                                            onPress={() => setShowTimePicker(true)}
+                                                        >
+                                                            <Text style={stylesAddListingScreen.inputText}>
+                                                                {values.time || 'Select Time'}
+                                                            </Text>
+                                                        </TouchableOpacity>
+                                                        {showTimePicker && (
+                                                            <DateTimePicker
+                                                                value={values.time ? new Date(`1970-01-01T${values.time}`) : new Date()}
+                                                                mode="time"
+                                                                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                                                onChange={(event, selectedDate) => {
+                                                                    setShowTimePicker(false);
+                                                                    if (selectedDate && event.type !== 'dismissed') {
+                                                                        setFieldValue('time', formatTime(selectedDate));
+                                                                    }
+                                                                }}
+                                                            />
+                                                        )}
+                                                    </View>
                                                 </View>
                                                 <View style={stylesAddListingScreen.formRow}>
                                                     <Text style={stylesAddListingScreen.label}>Location</Text>
@@ -226,7 +280,7 @@ const AddListingScreen = () => {
                                                         showsHorizontalScrollIndicator={false}
                                                         style={stylesAddListingScreen.imageScrollView}
                                                     >
-                                                        {values.images.map((image, index) => (
+                                                        {values.images.map((image: string, index: number) => (
                                                             <ImagePreview 
                                                                 key={index}
                                                                 image={image} 
@@ -255,13 +309,13 @@ const AddListingScreen = () => {
                                                     <Text style={stylesAddListingScreen.submitButtonText}>Submit</Text>
                                                 </TouchableOpacity>
                                             </View>
-                                    </TouchableWithoutFeedback>
+                                        </TouchableWithoutFeedback>
+                                    </KeyboardAvoidingView>
                                 );
                             }}
                         </Formik>
                     </View>
                 </ScrollView>
-                
             </View>
         </View>
     );

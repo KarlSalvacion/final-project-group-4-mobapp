@@ -3,6 +3,7 @@ import { StyleSheet } from "react-native";
 export const stylesAddListingScreen = StyleSheet.create({
     mainContainer: {
         flex: 1,
+        width: '100%',
     },
     headerContainer: {
         height: 50,
@@ -31,7 +32,7 @@ export const stylesAddListingScreen = StyleSheet.create({
         flex: 1,
         width: '100%',
         alignItems: 'center',
-        paddingTop: 0,
+        
     },
 
     scrollContainer: {
@@ -39,7 +40,6 @@ export const stylesAddListingScreen = StyleSheet.create({
         flex: 1,
         width: '100%',
         paddingHorizontal: 20,
-        paddingVertical: 20,
     },
 
     formContainer: {
@@ -63,6 +63,19 @@ export const stylesAddListingScreen = StyleSheet.create({
         gap: 10,
     },
 
+    formRow2: {
+        flexDirection: 'row',
+        gap: 10,
+    },
+
+    dateContainer: {
+        flex: 1,
+    },
+
+    timeContainer: {
+        flex: 1,
+    },
+
     label: {
         fontSize: 16,
         fontWeight: 400,
@@ -75,6 +88,12 @@ export const stylesAddListingScreen = StyleSheet.create({
         borderColor: 'gray',
         borderRadius: 5,
         paddingHorizontal: 10,
+        justifyContent: 'center',
+    },
+
+    inputText: {
+        fontSize: 14,
+        color: '#333',
     },
 
     imageInput: {
