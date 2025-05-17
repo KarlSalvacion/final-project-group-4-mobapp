@@ -31,15 +31,24 @@ export const stylesAddListingScreen = StyleSheet.create({
         flex: 1,
         width: '100%',
         alignItems: 'center',
+        paddingTop: 0,
+    },
+
+    scrollContainer: {
         paddingTop: 20,
+        flex: 1,
+        width: '100%',
+        paddingHorizontal: 20,
+        paddingVertical: 20,
     },
 
     formContainer: {
-        width: '90%',
+        width: '100%',
         alignItems: 'center',
         justifyContent: 'center',
     },
 
+    
     form: {
         width: '100%',
         alignItems: 'center',
@@ -115,5 +124,37 @@ export const stylesAddListingScreen = StyleSheet.create({
     imageScrollView: {
         flexDirection: 'row',
         marginTop: 10,
+    },
+
+    typeToggleContainer: {
+        flexDirection: 'row',
+        width: '100%',
+        gap: 10,
+    },
+    typeToggleButton: {
+        flex: 1,
+        padding: 12,
+        borderRadius: 8,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 2,
+    },
+    typeToggleActive: {
+        backgroundColor: 'rgb(25, 153, 100)',
+        borderColor: 'rgb(25, 153, 100)',
+    },
+    typeToggleInactive: {
+        backgroundColor: 'transparent',
+        borderColor: 'rgb(25, 153, 100)',
+    },
+    typeToggleText: {
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    typeToggleTextActive: {
+        color: 'white',
+    },
+    typeToggleTextInactive: {
+        color: 'rgb(25, 153, 100)',
     },
 });

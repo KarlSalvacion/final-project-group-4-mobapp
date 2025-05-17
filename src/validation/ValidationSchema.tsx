@@ -1,6 +1,7 @@
 import * as Yup from 'yup';
 
 export const validationSchema = Yup.object().shape({
+    listingType: Yup.string().oneOf(['lost', 'found'], 'Type must be either lost or found').required('Type is required'),
     name: Yup.string().required('Name is required'),
     description: Yup.string().required('Description is required'),
     date: Yup.string().required('Date is required'),
