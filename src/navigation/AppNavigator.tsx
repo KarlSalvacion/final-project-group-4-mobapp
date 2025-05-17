@@ -24,9 +24,10 @@ const AppNavigator = () => {
                     // Admin Stack
                     <Stack.Screen name="AdminTabs" component={AdminNavigationBar} />
                 ) : (
-                    // User Stack
-                    <Stack.Screen name="MainTabs" component={NavigationBar} />
-                    <Stack.Screen name="DetailedItemListing" component={DetailedItemListingScreen} />
+                    <>
+                        <Stack.Screen name="MainTabs" component={NavigationBar} />
+                        <Stack.Screen name="DetailedItemListing" component={DetailedItemListingScreen} />
+                    </>
                 )}
             </Stack.Navigator>
         </NavigationContainer>
