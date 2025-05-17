@@ -3,6 +3,7 @@ import { StyleSheet } from "react-native";
 export const stylesAddListingScreen = StyleSheet.create({
     mainContainer: {
         flex: 1,
+        width: '100%',
     },
     headerContainer: {
         height: 50,
@@ -31,15 +32,23 @@ export const stylesAddListingScreen = StyleSheet.create({
         flex: 1,
         width: '100%',
         alignItems: 'center',
+        
+    },
+
+    scrollContainer: {
         paddingTop: 20,
+        flex: 1,
+        width: '100%',
+        paddingHorizontal: 20,
     },
 
     formContainer: {
-        width: '90%',
+        width: '100%',
         alignItems: 'center',
         justifyContent: 'center',
     },
 
+    
     form: {
         width: '100%',
         alignItems: 'center',
@@ -54,6 +63,19 @@ export const stylesAddListingScreen = StyleSheet.create({
         gap: 10,
     },
 
+    formRow2: {
+        flexDirection: 'row',
+        gap: 10,
+    },
+
+    dateContainer: {
+        flex: 1,
+    },
+
+    timeContainer: {
+        flex: 1,
+    },
+
     label: {
         fontSize: 16,
         fontWeight: 400,
@@ -66,6 +88,12 @@ export const stylesAddListingScreen = StyleSheet.create({
         borderColor: 'gray',
         borderRadius: 5,
         paddingHorizontal: 10,
+        justifyContent: 'center',
+    },
+
+    inputText: {
+        fontSize: 14,
+        color: '#333',
     },
 
     imageInput: {
@@ -115,5 +143,37 @@ export const stylesAddListingScreen = StyleSheet.create({
     imageScrollView: {
         flexDirection: 'row',
         marginTop: 10,
+    },
+
+    typeToggleContainer: {
+        flexDirection: 'row',
+        width: '100%',
+        gap: 10,
+    },
+    typeToggleButton: {
+        flex: 1,
+        padding: 12,
+        borderRadius: 8,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 2,
+    },
+    typeToggleActive: {
+        backgroundColor: 'rgb(25, 153, 100)',
+        borderColor: 'rgb(25, 153, 100)',
+    },
+    typeToggleInactive: {
+        backgroundColor: 'transparent',
+        borderColor: 'rgb(25, 153, 100)',
+    },
+    typeToggleText: {
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    typeToggleTextActive: {
+        color: 'white',
+    },
+    typeToggleTextInactive: {
+        color: 'rgb(25, 153, 100)',
     },
 });
