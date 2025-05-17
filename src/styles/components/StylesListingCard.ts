@@ -46,6 +46,12 @@ export const stylesListingCard = StyleSheet.create({
         gap: 8,
         marginTop: 4,
     },
+
+    typeText: {
+        fontSize: 14,
+        color: '#666',
+    },
+    
     locationText: {
         fontSize: 14,
         color: '#666',

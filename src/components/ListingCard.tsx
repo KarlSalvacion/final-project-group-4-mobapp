@@ -31,6 +31,9 @@ const ListingCard = ({ listing, onPress }: ListingCardProps) => {
                 <Text style={stylesListingCard.description} numberOfLines={2}>
                     {listing.description}
                 </Text>
+                <Text style={stylesListingCard.typeText}>
+                    {listing.listingType}
+                </Text>
                 <View style={stylesListingCard.detailsContainer}>
                     <Ionicons name="location" style={stylesListingCard.icon} />
                     <Text style={stylesListingCard.locationText} numberOfLines={1}>
