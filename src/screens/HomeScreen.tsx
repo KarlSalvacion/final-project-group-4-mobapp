@@ -10,6 +10,7 @@ import ListingCard from '../components/ListingCard';
 type RootStackParamList = {
     Home: undefined;
     AddListing: undefined;
+    DetailedItemListing: { listingId: string };
 };
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
@@ -19,7 +20,7 @@ const HomeScreen = () => {
     const { listings } = useListings();
 
     const handleListingPress = (listingId: string) => {
-        console.log('Listing pressed:', listingId);
+        navigation.navigate('DetailedItemListing', { listingId });
     };
 
     return (
