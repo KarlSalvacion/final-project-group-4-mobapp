@@ -35,6 +35,13 @@ const AddListingScreen = () => {
     const [showTimePicker, setShowTimePicker] = useState(false);
 
     const handleSubmit = (values: FormValues) => {
+        if (!values.date || !values.time) {
+            Alert.alert(
+                "Validation Error",
+                "Please select both date and time before submitting."
+            );
+            return;
+        }
         addListing(values);
         Alert.alert(
             "Success",
@@ -203,15 +210,18 @@ const AddListingScreen = () => {
                                                         onBlur={handleBlur('description')}
                                                     />
                                                 </View>
-                                                <View style={stylesAddListingScreen.formRow2}>
-                                                    <View style={stylesAddListingScreen.dateContainer}>
+                                 
+                                                <View style={stylesAddListingScreen.formRow}>
                                                         <Text style={stylesAddListingScreen.label}>Date</Text>
                                                         <TouchableOpacity
-                                                            style={stylesAddListingScreen.input}
+                                                            style={[
+                                                                stylesAddListingScreen.input,
+                                                                !values.date && stylesAddListingScreen.requiredInput
+                                                            ]}
                                                             onPress={() => setShowDatePicker(true)}
                                                         >
                                                             <Text style={stylesAddListingScreen.inputText}>
-                                                                {values.date || 'Select Date'}
+                                                                {values.date || 'Select Date *'}
                                                             </Text>
                                                         </TouchableOpacity>
                                                         {showDatePicker && (
@@ -219,6 +229,7 @@ const AddListingScreen = () => {
                                                                 value={values.date ? new Date(values.date) : new Date()}
                                                                 mode="date"
                                                                 display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                                                minimumDate={new Date(2024, 0, 1)}
                                                                 onChange={(event, selectedDate) => {
                                                                     setShowDatePicker(false);
                                                                     if (selectedDate && event.type !== 'dismissed') {
@@ -227,33 +238,36 @@ const AddListingScreen = () => {
                                                                 }}
                                                             />
                                                         )}
-                                                    </View>
-
-                                                    <View style={stylesAddListingScreen.timeContainer}>
-                                                        <Text style={stylesAddListingScreen.label}>Time</Text>
-                                                        <TouchableOpacity
-                                                            style={stylesAddListingScreen.input}
-                                                            onPress={() => setShowTimePicker(true)}
-                                                        >
-                                                            <Text style={stylesAddListingScreen.inputText}>
-                                                                {values.time || 'Select Time'}
-                                                            </Text>
-                                                        </TouchableOpacity>
-                                                        {showTimePicker && (
-                                                            <DateTimePicker
-                                                                value={values.time ? new Date(`1970-01-01T${values.time}`) : new Date()}
-                                                                mode="time"
-                                                                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                                                                onChange={(event, selectedDate) => {
-                                                                    setShowTimePicker(false);
-                                                                    if (selectedDate && event.type !== 'dismissed') {
-                                                                        setFieldValue('time', formatTime(selectedDate));
-                                                                    }
-                                                                }}
-                                                            />
-                                                        )}
-                                                    </View>
                                                 </View>
+
+                                                <View style={stylesAddListingScreen.formRow}>
+                                                    <Text style={stylesAddListingScreen.label}>Time</Text>
+                                                    <TouchableOpacity
+                                                        style={[
+                                                            stylesAddListingScreen.input,
+                                                            !values.time && stylesAddListingScreen.requiredInput
+                                                        ]}
+                                                        onPress={() => setShowTimePicker(true)}
+                                                    >
+                                                        <Text style={stylesAddListingScreen.inputText}>
+                                                            {values.time || 'Select Time *'}
+                                                        </Text>
+                                                    </TouchableOpacity>
+                                                    {showTimePicker && (
+                                                        <DateTimePicker
+                                                            value={values.time ? new Date(`1970-01-01T${values.time}`) : new Date()}
+                                                            mode="time"
+                                                            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                                            onChange={(event, selectedDate) => {
+                                                                setShowTimePicker(false);
+                                                                if (selectedDate && event.type !== 'dismissed') {
+                                                                    setFieldValue('time', formatTime(selectedDate));
+                                                                }
+                                                            }}
+                                                        />
+                                                    )}
+                                                </View>
+
                                                 <View style={stylesAddListingScreen.formRow}>
                                                     <Text style={stylesAddListingScreen.label}>Location</Text>
                                                     <TextInput
@@ -264,6 +278,7 @@ const AddListingScreen = () => {
                                                         onBlur={handleBlur('location')}
                                                     />
                                                 </View>
+
                                                 <View style={stylesAddListingScreen.formRow}>
                                                     <Text style={stylesAddListingScreen.label}>Images ({values.images.length}/5)</Text>
                                                     <TouchableOpacity
@@ -293,6 +308,7 @@ const AddListingScreen = () => {
                                                         <Text style={stylesAddListingScreen.errorText}>{errors.images}</Text>
                                                     )}
                                                 </View>
+
                                                 <TouchableOpacity
                                                     style={stylesAddListingScreen.submitButton}
                                                     onPress={() => {
