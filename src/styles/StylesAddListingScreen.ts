@@ -91,6 +91,10 @@ export const stylesAddListingScreen = StyleSheet.create({
         justifyContent: 'center',
     },
 
+    requiredInput: {
+        borderColor: 'red',
+    },
+
     inputText: {
         fontSize: 14,
         color: '#333',
