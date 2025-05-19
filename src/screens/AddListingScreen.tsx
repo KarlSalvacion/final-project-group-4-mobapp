@@ -9,7 +9,7 @@ import * as Yup from 'yup';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import ImagePreview from '../components/ImagePreview';
-import { validationSchema } from '../validation/ValidationSchema';
+import { listingValidationSchema } from '../validation/ValidationSchema';
 import { useListings } from '../context/ListingContext';
 import { ListingType } from '../context/ListingContext';
 
@@ -101,7 +101,7 @@ const AddListingScreen = () => {
                                 location: '',
                                 images: [],
                             }}
-                            validationSchema={validationSchema}
+                            validationSchema={listingValidationSchema}
                             onSubmit={(values: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
                                 handleSubmit(values);
                                 resetForm({

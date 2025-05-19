@@ -8,43 +8,38 @@ interface LoginPageStyles {
   title: TextStyle;
   subtitle: TextStyle;
   inputContainer: ViewStyle;
+  inputWrapper: ViewStyle;
   input: ViewStyle & TextStyle;
+  inputError: ViewStyle;
+  errorText: TextStyle;
+  clearButton: ViewStyle;
+  inputIcons: ViewStyle;
+  passwordToggle: ViewStyle;
   loginButton: ViewStyle;
   loginButtonText: TextStyle;
-  forgotPassword: ViewStyle;
-  forgotPasswordText: TextStyle;
+  createAccountButton: ViewStyle;
+  createAccountText: TextStyle;
+  disabledButton: ViewStyle;
 }
 
 export const styles = StyleSheet.create<LoginPageStyles>({
   container: {
     flex: 1,
-    backgroundColor: 'rgb(25, 153, 100)',
+    backgroundColor: '#fff',
   },
   formContainer: {
     flex: 1,
+    padding: 20,
     justifyContent: 'center',
-    paddingHorizontal: 20,
-    backgroundColor: '#fff',
-    margin: 20,
-    borderRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
   },
   logoContainer: {
     alignItems: 'center',
     marginBottom: 20,
   },
   logoText: {
-    fontSize: 48,
+    fontSize: 32,
     fontWeight: 'bold',
     color: 'rgb(25, 153, 100)',
-    letterSpacing: 2,
   },
   title: {
     fontSize: 28,
@@ -56,13 +51,19 @@ export const styles = StyleSheet.create<LoginPageStyles>({
   subtitle: {
     fontSize: 16,
     color: '#666',
-    marginBottom: 30,
     textAlign: 'center',
+    marginBottom: 30,
   },
   inputContainer: {
-    marginBottom: 20,
+    marginBottom: 15,
+  },
+  inputWrapper: {
+    position: 'relative',
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   input: {
+    flex: 1,
     height: 50,
     borderWidth: 1,
     borderColor: '#ddd',
@@ -71,34 +72,50 @@ export const styles = StyleSheet.create<LoginPageStyles>({
     fontSize: 16,
     backgroundColor: '#f9f9f9',
   },
-  loginButton: {
-    backgroundColor: 'rgb(25, 153, 100)',
-    height: 50,
-    borderRadius: 20,
-    justifyContent: 'center',
+  inputError: {
+    borderColor: 'red',
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 12,
+    marginTop: 5,
+  },
+  clearButton: {
+    position: 'absolute',
+    right: 10,
+    padding: 5,
+  },
+  inputIcons: {
+    position: 'absolute',
+    right: 10,
+    flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 20,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+  },
+  passwordToggle: {
+    padding: 5,
+  },
+  loginButton: {
+    height: 50,
+    backgroundColor: 'rgb(25, 153, 100)',
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
   },
   loginButtonText: {
     color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
-  forgotPassword: {
+  createAccountButton: {
     marginTop: 20,
     alignItems: 'center',
   },
-  forgotPasswordText: {
+  createAccountText: {
     color: 'rgb(25, 153, 100)',
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: 14,
+  },
+  disabledButton: {
+    backgroundColor: '#ccc',
   },
 });
