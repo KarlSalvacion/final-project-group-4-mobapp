@@ -6,6 +6,7 @@ import AuthNavigator from './AuthNavigator';
 import { useAuth } from '../context/AuthContext';
 import AdminNavigationBar from '../adminNavigation/AdminNavigationBar';
 import DetailedItemListingScreen from '../screens/DetailedItemListingScreen';
+import ProfileScreen from '../screens/ProfileScreen';
 
 const Stack = createStackNavigator();
 
@@ -28,6 +29,7 @@ const AppNavigator = () => {
                     <>
                         <Stack.Screen name="MainTabs" component={NavigationBar} />
                         <Stack.Screen name="DetailedItemListing" component={DetailedItemListingScreen} />
+                        <Stack.Screen name="Profile" component={ProfileScreen} />
                     </>
                 )}
             </Stack.Navigator>

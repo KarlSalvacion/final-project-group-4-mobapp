@@ -11,6 +11,7 @@ type RootStackParamList = {
     Home: undefined;
     AddListing: undefined;
     DetailedItemListing: { listingId: string };
+    Profile: undefined;
 };
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
@@ -29,7 +30,7 @@ const HomeScreen = () => {
                 <Text style={stylesHomeScreen.headerTitle}>DLSL FoundIt</Text>
                 <TouchableOpacity 
                     style={stylesHomeScreen.profileButton}
-                    onPress={() => console.log('Profile')}
+                    onPress={() => navigation.navigate('Profile')}
                 >
                     <Ionicons 
                         name="person" 

@@ -45,7 +45,7 @@ const SignUpScreen = () => {
             setIsLoading(true);
             const userId = uuidv4();
             
-            const response = await fetch('http://localhost:5000/api/users/register', {
+            const response = await fetch('http://192.168.1.6:5000/api/users/register', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

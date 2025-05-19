@@ -1,50 +1,52 @@
-import React, { createContext, useState, useContext, ReactNode } from 'react';
+import React, { createContext, useContext, useState } from 'react';
+
+interface UserData {
+    name: string;
+    username: string;
+    role: string;
+    email: string;
+    createdAt: string;
+    profilePhoto?: string;
+}
 
 interface AuthContextType {
-  isAuthenticated: boolean;
-  userType: 'admin' | 'user' | null;
-  login: (email: string, userType: 'admin' | 'user') => void;
-  logout: () => void;
+    isAuthenticated: boolean;
+    userType: 'admin' | 'user' | null;
+    userData: UserData | null;
+    login: (email: string, userType: 'admin' | 'user', userData: UserData) => Promise<void>;
+    logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [userType, setUserType] = useState<'admin' | 'user' | null>(null);
+    const [userData, setUserData] = useState<UserData | null>(null);
 
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userType, setUserType] = useState<'admin' | 'user' | null>(null);
+    const login = async (email: string, userType: 'admin' | 'user', userData: UserData) => {
+        setIsAuthenticated(true);
+        setUserType(userType);
+        setUserData(userData);
+    };
 
-  const login = (email: string, type: 'admin' | 'user') => {
-    setIsAuthenticated(true);
-    setUserType(type);
-  };
+    const logout = () => {
+        setIsAuthenticated(false);
+        setUserType(null);
+        setUserData(null);
+    };
 
-  const logout = () => {
-    setIsAuthenticated(false);
-    setUserType(null);
-  };
-
-  return (
-    <AuthContext.Provider
-      value={{
-        isAuthenticated,
-        userType,
-        login,
-        logout,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+    return (
+        <AuthContext.Provider value={{ isAuthenticated, userType, userData, login, logout }}>
+            {children}
+        </AuthContext.Provider>
+    );
 };
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+    const context = useContext(AuthContext);
+    if (context === undefined) {
+        throw new Error('useAuth must be used within an AuthProvider');
+    }
+    return context;
 }; 
