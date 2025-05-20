@@ -15,10 +15,15 @@ const listingSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    category: {
+    type: {
         type: String,
         required: true,
         enum: ['lost', 'found']
+    },
+    category: {
+        type: String,
+        required: true,
+        enum: ['clothes', 'electronics', 'accessories', 'documents', 'books', 'jewelry', 'bags', 'other']
     },
     location: {
         type: String,
@@ -27,6 +32,16 @@ const listingSchema = new mongoose.Schema({
     date: {
         type: Date,
         required: true
+    },
+    time: {
+        type: String,
+        required: true,
+        validate: {
+            validator: function(v) {
+                return /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(v);
+            },
+            message: 'Time must be in HH:MM format'
+        }
     },
     images: {
         type: [String],

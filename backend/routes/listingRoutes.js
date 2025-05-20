@@ -18,10 +18,28 @@ router.get('/', async (req, res) => {
 router.post('/', upload.array('images', 5), async (req, res) => {
   try {
     // Validate required fields
-    const requiredFields = ['title', 'description', 'category', 'location', 'date'];
+    const requiredFields = ['title', 'description', 'type', 'category', 'location', 'date', 'time'];
     const validationError = validateRequiredFields(requiredFields, req.body);
     if (validationError) {
       return res.status(validationError.status).json({ message: validationError.error });
+    }
+
+    // Validate type and category values
+    const validTypes = ['lost', 'found'];
+    const validCategories = ['clothes', 'electronics', 'accessories', 'documents', 'books', 'jewelry', 'bags', 'other'];
+    
+    if (!validTypes.includes(req.body.type)) {
+      return res.status(400).json({ message: 'Invalid type. Must be either "lost" or "found"' });
+    }
+    
+    if (!validCategories.includes(req.body.category)) {
+      return res.status(400).json({ message: 'Invalid category' });
+    }
+
+    // Validate time format
+    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    if (!timeRegex.test(req.body.time)) {
+      return res.status(400).json({ message: 'Invalid time format. Must be in HH:MM format' });
     }
 
     // Upload images
@@ -60,6 +78,29 @@ router.put('/:id', upload.array('images', 5), async (req, res) => {
     const { error, item: listing } = await validateOwnership(Listing, req.params.id, req.user.userId);
     if (error) {
       return res.status(error.status).json({ message: error.error });
+    }
+
+    // Validate type and category if they are being updated
+    if (req.body.type) {
+      const validTypes = ['lost', 'found'];
+      if (!validTypes.includes(req.body.type)) {
+        return res.status(400).json({ message: 'Invalid type. Must be either "lost" or "found"' });
+      }
+    }
+
+    if (req.body.category) {
+      const validCategories = ['clothes', 'electronics', 'accessories', 'documents', 'books', 'jewelry', 'bags', 'other'];
+      if (!validCategories.includes(req.body.category)) {
+        return res.status(400).json({ message: 'Invalid category' });
+      }
+    }
+
+    // Validate time format if it's being updated
+    if (req.body.time) {
+      const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+      if (!timeRegex.test(req.body.time)) {
+        return res.status(400).json({ message: 'Invalid time format. Must be in HH:MM format' });
+      }
     }
 
     // Handle new image uploads if any
