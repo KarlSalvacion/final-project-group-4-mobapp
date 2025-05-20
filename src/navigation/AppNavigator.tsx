@@ -5,12 +5,11 @@ import NavigationBar from './NavigationBar';
 import AuthNavigator from './AuthNavigator';
 import { useAuth } from '../context/AuthContext';
 import AdminNavigationBar from '../adminNavigation/AdminNavigationBar';
-import DetailedItemListingScreen from '../screens/DetailedItemListingScreen';
 
 const Stack = createStackNavigator();
 
 const AppNavigator = () => {
-    const { isAuthenticated, userType } = useAuth();
+    const { isAuthenticated, user } = useAuth();
 
     return (
         <NavigationContainer>
@@ -20,14 +19,12 @@ const AppNavigator = () => {
                 {!isAuthenticated ? (
                     // Auth Stack
                     <Stack.Screen name="Auth" component={AuthNavigator} />
-                ) : userType === 'admin' ? (
+                ) : user?.role === 'admin' ? (
                     // Admin Stack
                     <Stack.Screen name="AdminTabs" component={AdminNavigationBar} />
                 ) : (
-                    <>
-                        <Stack.Screen name="MainTabs" component={NavigationBar} />
-                        <Stack.Screen name="DetailedItemListing" component={DetailedItemListingScreen} />
-                    </>
+                    // User Stack
+                    <Stack.Screen name="MainTabs" component={NavigationBar} />
                 )}
             </Stack.Navigator>
         </NavigationContainer>

@@ -30,10 +30,10 @@ export default function AdminNavigationBar() {
 
                     if (route.name === 'Dashboard') {
                         iconName = focused ? 'home' : 'home-outline';
-                    } else if (route.name === 'Listings') {
-                        iconName = focused ? 'list' : 'list-outline';
                     } else if (route.name === 'Tickets') {
                         iconName = focused ? 'ticket' : 'ticket-outline';
+                    } else if (route.name === 'Listings') {
+                        iconName = focused ? 'list' : 'list-outline';
                     } else {
                         iconName = 'alert-circle';
                     }
@@ -47,8 +47,8 @@ export default function AdminNavigationBar() {
             })}
         >
             <Tab.Screen name="Dashboard" component={AdminDashboard} />
-            <Tab.Screen name="Listings" component={AdminListingPage} />
             <Tab.Screen name="Tickets" component={AdminTicketPage} />
+            <Tab.Screen name="Listings" component={AdminListingPage} />
         </Tab.Navigator>
     );
 }

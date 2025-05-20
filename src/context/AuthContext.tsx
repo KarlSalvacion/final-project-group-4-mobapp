@@ -1,9 +1,17 @@
 import React, { createContext, useState, useContext, ReactNode } from 'react';
 
+interface User {
+  username: string;
+  email: string;
+  name: string;
+  profilePicture: string | null;
+  role: 'admin' | 'user';
+}
+
 interface AuthContextType {
   isAuthenticated: boolean;
-  userType: 'admin' | 'user' | null;
-  login: (email: string, userType: 'admin' | 'user') => void;
+  user: User | null;
+  login: (userData: User) => void;
   logout: () => void;
 }
 
@@ -15,23 +23,23 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userType, setUserType] = useState<'admin' | 'user' | null>(null);
+  const [user, setUser] = useState<User | null>(null);
 
-  const login = (email: string, type: 'admin' | 'user') => {
+  const login = (userData: User) => {
+    setUser(userData);
     setIsAuthenticated(true);
-    setUserType(type);
   };
 
   const logout = () => {
+    setUser(null);
     setIsAuthenticated(false);
-    setUserType(null);
   };
 
   return (
     <AuthContext.Provider
       value={{
         isAuthenticated,
-        userType,
+        user,
         login,
         logout,
       }}

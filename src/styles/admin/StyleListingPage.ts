@@ -3,21 +3,50 @@ import { StyleSheet } from "react-native";
 const stylesAdminListingPage = StyleSheet.create({
     mainContainer: {
         flex: 1,
-        backgroundColor: "#00B04F",
+        backgroundColor: "#FFF",
     },
     headerContainer: {
         flexDirection: "row",
-        justifyContent: "space-between",
+        justifyContent: "flex-start",
         alignItems: "center",
-        height: 100,
+        height: 120,
         width: '100%',
         backgroundColor: 'rgb(25, 153, 100)',
         paddingHorizontal: 20,
     },
-    headerTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
+    headerContent: {
+        flexDirection: 'row',
+        justifyContent: 'flex-start',
+        alignItems: 'center',
+    },
+    headerLogo: {
+        width: 180,
+        height: 100,
+    },
+    headerTextContainer: {
+        flexDirection: 'column',
+        alignItems: 'flex-start',
+    },
+    schoolName: {
+        fontSize: 16,
         color: '#fff',
+        marginBottom: 8,
+        fontWeight: '600',
+        letterSpacing: 0.5,
+    },
+    logoTextContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+    },
+    headerTitle: {
+        fontSize: 32,
+        fontWeight: '800',
+        color: '#fff',
+        letterSpacing: 1,
+    },
+    headerIcon: {
+        marginHorizontal: 4,
     },
 });
 

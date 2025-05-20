@@ -7,15 +7,9 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  Image,
 } from 'react-native';
 import { styles } from '../styles/components/StylesLoginPage';
 import { useAuth } from '../context/AuthContext';
-
-// List of admin email addresses
-const ADMIN_EMAILS = [  // For testing purposes
-  'admin@test.com',
-];
 
 const LoginPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -32,10 +26,6 @@ const LoginPage: React.FC = () => {
     }));
   };
 
-  const isAdminUser = (email: string): boolean => {
-    return ADMIN_EMAILS.includes(email.toLowerCase());
-  };
-
   const handleLogin = async () => {
     try {
       setIsLoading(true);
@@ -50,16 +40,23 @@ const LoginPage: React.FC = () => {
         return;
       }
 
-      // Determine user type before login
-      const userType = isAdminUser(formData.email) ? 'admin' : 'user';
-      console.log('Logging in as:', userType); // Debug log
+      // TODO: Replace with actual API call to your backend
+      // This is a mock response simulating your MongoDB data
+      const mockUserData = {
+        username: "user1",
+        email: formData.email,
+        password: formData.password,
+        name: "User One",
+        profilePicture: null,
+        role: formData.email === "user1@example.com" ? "admin" : "user"
+      };
 
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Login with determined user type
-      login(formData.email, userType);
-      console.log('Login successful as:', userType); // Debug log
+      // Login with user data
+      login(mockUserData);
+      console.log('Login successful as:', mockUserData.role);
 
     } catch (error) {
       Alert.alert('Error', 'Login failed. Please try again.');
