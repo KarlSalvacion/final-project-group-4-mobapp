@@ -35,13 +35,7 @@ const listingSchema = new mongoose.Schema({
     },
     time: {
         type: String,
-        required: true,
-        validate: {
-            validator: function(v) {
-                return /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(v);
-            },
-            message: 'Time must be in HH:MM format'
-        }
+        required: true
     },
     images: {
         type: [String],

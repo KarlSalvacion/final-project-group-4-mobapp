@@ -25,7 +25,9 @@ router.get('/check-token', async (req, res) => {
                 id: user._id,
                 username: user.username,
                 email: user.email,
-                role: user.role
+                name: user.name,
+                role: user.role,
+                createdAt: user.createdAt
             }
         });
     } catch (error) {

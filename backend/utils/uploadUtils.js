@@ -5,7 +5,7 @@ const cloudinary = require('../config/cloudinary');
 const upload = multer({ 
     storage: multer.memoryStorage(),
     limits: {
-        fileSize: 5 * 1024 * 1024 // 5MB limit
+        fileSize: 10 * 1024 * 1024 // 10MB limit
     }
 });
 
@@ -17,7 +17,15 @@ const uploadToCloudinary = async (files) => {
             try {
                 const result = await new Promise((resolve, reject) => {
                     cloudinary.uploader.upload_stream({
-                        upload_preset: 'mobile_upload'
+                        resource_type: "auto",
+                        chunk_size: 10000000, // 10MB chunks
+                        upload_preset: 'mobile_upload',
+                        transformation: [
+                            { width: 800, height: 800, crop: "limit" },
+                            { quality: "auto:low" },
+                            { fetch_format: "auto" },
+                            { flags: "attachment" }
+                        ]
                     }, (error, result) => {
                         if (error) reject(error);
                         else resolve(result);

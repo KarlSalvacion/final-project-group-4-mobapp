@@ -36,12 +36,6 @@ router.post('/', upload.array('images', 5), async (req, res) => {
       return res.status(400).json({ message: 'Invalid category' });
     }
 
-    // Validate time format
-    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
-    if (!timeRegex.test(req.body.time)) {
-      return res.status(400).json({ message: 'Invalid time format. Must be in HH:MM format' });
-    }
-
     // Upload images
     const imageUrls = await uploadToCloudinary(req.files);
 
@@ -92,14 +86,6 @@ router.put('/:id', upload.array('images', 5), async (req, res) => {
       const validCategories = ['clothes', 'electronics', 'accessories', 'documents', 'books', 'jewelry', 'bags', 'other'];
       if (!validCategories.includes(req.body.category)) {
         return res.status(400).json({ message: 'Invalid category' });
-      }
-    }
-
-    // Validate time format if it's being updated
-    if (req.body.time) {
-      const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
-      if (!timeRegex.test(req.body.time)) {
-        return res.status(400).json({ message: 'Invalid time format. Must be in HH:MM format' });
       }
     }
 

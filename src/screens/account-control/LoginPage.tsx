@@ -64,19 +64,10 @@ const LoginPage: React.FC = () => {
       }
 
       const data = await response.json();
-      const { token } = data;
+      const { token, user } = data;
 
       const userType = isAdminUser(values.email) ? 'admin' : 'user';
-      // Provide a dummy UserData object to satisfy the type
-      const dummyUserData = {
-        name: '',
-        username: '',
-        role: userType,
-        email: values.email,
-        createdAt: '',
-        profilePhoto: '',
-      };
-      await login(values.email, userType, dummyUserData, token);
+      await login(values.email, userType, user, token);
 
     } catch (error) {
       Alert.alert('Error', error instanceof Error ? error.message : 'Login failed. Please try again.');
