@@ -43,7 +43,7 @@ router.post('/', upload.array('images', 5), async (req, res) => {
     }
 
     // Upload images
-    const imageUrls = await uploadToCloudinary(req.files, 'listings');
+    const imageUrls = await uploadToCloudinary(req.files);
 
     const listing = new Listing({
       ...req.body,
@@ -105,7 +105,7 @@ router.put('/:id', upload.array('images', 5), async (req, res) => {
 
     // Handle new image uploads if any
     if (req.files && req.files.length > 0) {
-      const imageUrls = await uploadToCloudinary(req.files, 'listings');
+      const imageUrls = await uploadToCloudinary(req.files);
       req.body.images = imageUrls;
     }
 
