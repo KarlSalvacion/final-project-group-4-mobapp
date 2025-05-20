@@ -69,6 +69,30 @@ const stylesProfileScreen = StyleSheet.create({
         color: '#333',
         fontWeight: '500',
     },
+    buttonContainer: {
+        marginTop: 30,
+        paddingHorizontal: 20,
+        gap: 12,
+    },
+    button: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 16,
+        borderRadius: 12,
+        gap: 8,
+    },
+    logoutButton: {
+        backgroundColor: '#666',
+    },
+    deleteButton: {
+        backgroundColor: '#dc3545',
+    },
+    buttonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
+    },
 });
 
 export default stylesProfileScreen;

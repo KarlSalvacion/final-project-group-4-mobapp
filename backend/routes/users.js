@@ -62,4 +62,22 @@ router.get('/profile/:email', async (req, res) => {
     }
 });
 
+// Delete user account
+router.delete('/delete-account', async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        // Find and delete user
+        const user = await User.findOneAndDelete({ email });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.json({ message: 'Account deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting account:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 module.exports = router; 

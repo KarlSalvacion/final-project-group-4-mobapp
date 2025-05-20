@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, TextInput, Image, ScrollView, TouchableWithoutFeedback, Keyboard, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { stylesAddListingScreen } from '../styles/StylesAddListingScreen';
@@ -12,6 +12,8 @@ import ImagePreview from '../components/ImagePreview';
 import { listingValidationSchema } from '../validation/ValidationSchema';
 import { useListings } from '../context/ListingContext';
 import { ListingType } from '../context/ListingContext';
+import { Picker } from '@react-native-picker/picker';
+import * as Location from 'expo-location';
 
 type RootStackParamList = {
     Home: undefined;
@@ -26,15 +28,72 @@ type FormValues = {
     time: string;
     location: string;
     images: string[];
+    category: string;
 };
+
+const CATEGORIES = [
+    'Electronics',
+    'Clothing',
+    'School Equipment',
+    'Personal Belongings',
+    'Miscellaneous'
+];
 
 const AddListingScreen = () => {
     const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
     const { addListing } = useListings();
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [showTimePicker, setShowTimePicker] = useState(false);
+    const [showCategoryPicker, setShowCategoryPicker] = useState(false);
+    const [locationPermission, setLocationPermission] = useState<boolean | null>(null);
 
-    const handleSubmit = (values: FormValues) => {
+    useEffect(() => {
+        (async () => {
+            const { status } = await Location.requestForegroundPermissionsAsync();
+            setLocationPermission(status === 'granted');
+        })();
+    }, []);
+
+    const getCurrentLocation = async () => {
+        try {
+            if (!locationPermission) {
+                Alert.alert(
+                    "Location Permission Required",
+                    "Please enable location services to automatically get your location for found items."
+                );
+                return null;
+            }
+
+            const location = await Location.getCurrentPositionAsync({});
+            const { latitude, longitude } = location.coords;
+            
+            // Get address from coordinates
+            const [address] = await Location.reverseGeocodeAsync({
+                latitude,
+                longitude
+            });
+
+            if (address) {
+                const locationString = [
+                    address.street,
+                    address.city,
+                    address.region,
+                    address.postalCode
+                ].filter(Boolean).join(', ');
+                return locationString;
+            }
+            return `${latitude}, ${longitude}`;
+        } catch (error) {
+            console.error('Error getting location:', error);
+            Alert.alert(
+                "Location Error",
+                "Failed to get your current location. Please enter the location manually."
+            );
+            return null;
+        }
+    };
+
+    const handleSubmit = async (values: FormValues) => {
         if (!values.date || !values.time) {
             Alert.alert(
                 "Validation Error",
@@ -42,19 +101,110 @@ const AddListingScreen = () => {
             );
             return;
         }
-        addListing(values);
-        Alert.alert(
-            "Success",
-            "Your listing has been added successfully!",
-            [
-                {
-                    text: "OK",
-                    onPress: () => {
-                        navigation.navigate('Home');
+
+        try {
+            // First, upload images to Cloudinary
+            const imageUrls = await Promise.all(
+                values.images.map(async (imageUri) => {
+                    try {
+                        const formData = new FormData();
+                        formData.append('file', {
+                            uri: imageUri,
+                            type: 'image/jpeg',
+                            name: 'image.jpg',
+                        } as any);
+                        formData.append('upload_preset', 'ml_default');
+                        formData.append('cloud_name', 'dl8ifxbsd');
+
+                        console.log('Uploading image to Cloudinary:', imageUri);
+                        const response = await fetch('https://api.cloudinary.com/v1_1/dl8ifxbsd/image/upload', {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'Accept': 'application/json',
+                                'Content-Type': 'multipart/form-data',
+                            },
+                        });
+
+                        if (!response.ok) {
+                            const errorData = await response.text();
+                            console.error('Cloudinary upload failed:', errorData);
+                            throw new Error(`Failed to upload image: ${errorData}`);
+                        }
+
+                        const data = await response.json();
+                        console.log('Cloudinary upload successful:', data.secure_url);
+                        return data.secure_url;
+                    } catch (error) {
+                        console.error('Error in individual image upload:', error);
+                        throw error;
                     }
-                }
-            ]
-        );
+                })
+            );
+
+            console.log('All images uploaded successfully:', imageUrls);
+
+            // Create the listing with the correct schema
+            const listingData = {
+                title: values.name,
+                description: values.description,
+                category: values.listingType,
+                location: values.location,
+                date: new Date(`${values.date} ${values.time}`).toISOString(),
+                images: imageUrls,
+                status: 'active'
+            };
+
+            // Detailed console logging of the listing data
+            console.log('=== LISTING DATA BEING SUBMITTED ===');
+            console.log('Title:', listingData.title);
+            console.log('Description:', listingData.description);
+            console.log('Category:', listingData.category);
+            console.log('Location:', listingData.location);
+            console.log('Date:', listingData.date);
+            console.log('Images:', listingData.images);
+            console.log('Status:', listingData.status);
+            console.log('===================================');
+
+            console.log('Sending listing data to server:', listingData);
+
+            const response = await fetch('http://192.168.1.6:5000/api/listings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(listingData),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.text();
+                console.error('Server response error:', errorData);
+                throw new Error(`Failed to create listing: ${errorData}`);
+            }
+
+            const newListing = await response.json();
+            console.log('Listing created successfully:', newListing);
+            addListing(newListing);
+
+            Alert.alert(
+                "Success",
+                "Your listing has been added successfully!",
+                [
+                    {
+                        text: "OK",
+                        onPress: () => {
+                            navigation.navigate('Home');
+                        }
+                    }
+                ]
+            );
+        } catch (error) {
+            console.error('Error creating listing:', error);
+            Alert.alert(
+                "Error",
+                error instanceof Error ? error.message : "Failed to create listing. Please try again."
+            );
+        }
     };
 
     const formatDate = (date: Date): string => {
@@ -100,6 +250,7 @@ const AddListingScreen = () => {
                                 time: '',
                                 location: '',
                                 images: [],
+                                category: '',
                             }}
                             validationSchema={listingValidationSchema}
                             onSubmit={(values: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
@@ -113,6 +264,7 @@ const AddListingScreen = () => {
                                         time: '',
                                         location: '',
                                         images: [],
+                                        category: '',
                                     }
                                 });
                             }}
@@ -210,34 +362,77 @@ const AddListingScreen = () => {
                                                         onBlur={handleBlur('description')}
                                                     />
                                                 </View>
-                                 
+
                                                 <View style={stylesAddListingScreen.formRow}>
-                                                        <Text style={stylesAddListingScreen.label}>Date</Text>
-                                                        <TouchableOpacity
-                                                            style={[
-                                                                stylesAddListingScreen.input,
-                                                                !values.date && stylesAddListingScreen.requiredInput
-                                                            ]}
-                                                            onPress={() => setShowDatePicker(true)}
-                                                        >
-                                                            <Text style={stylesAddListingScreen.inputText}>
-                                                                {values.date || 'Select Date *'}
-                                                            </Text>
-                                                        </TouchableOpacity>
-                                                        {showDatePicker && (
-                                                            <DateTimePicker
-                                                                value={values.date ? new Date(values.date) : new Date()}
-                                                                mode="date"
-                                                                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                                                                minimumDate={new Date(2024, 0, 1)}
-                                                                onChange={(event, selectedDate) => {
-                                                                    setShowDatePicker(false);
-                                                                    if (selectedDate && event.type !== 'dismissed') {
-                                                                        setFieldValue('date', formatDate(selectedDate));
-                                                                    }
+                                                    <Text style={stylesAddListingScreen.label}>Category</Text>
+                                                    <TouchableOpacity
+                                                        style={[
+                                                            stylesAddListingScreen.input,
+                                                            !values.category && stylesAddListingScreen.requiredInput
+                                                        ]}
+                                                        onPress={() => setShowCategoryPicker(true)}
+                                                    >
+                                                        <Text style={stylesAddListingScreen.inputText}>
+                                                            {values.category || 'Select Category *'}
+                                                        </Text>
+                                                    </TouchableOpacity>
+                                                    {showCategoryPicker && (
+                                                        <View style={stylesAddListingScreen.pickerContainer}>
+                                                            <View style={stylesAddListingScreen.pickerHeader}>
+                                                                <TouchableOpacity
+                                                                    onPress={() => setShowCategoryPicker(false)}
+                                                                    style={stylesAddListingScreen.pickerButton}
+                                                                >
+                                                                    <Text style={stylesAddListingScreen.pickerButtonText}>Done</Text>
+                                                                </TouchableOpacity>
+                                                            </View>
+                                                            <Picker
+                                                                selectedValue={values.category}
+                                                                onValueChange={(itemValue) => {
+                                                                    setFieldValue('category', itemValue);
+                                                                    setShowCategoryPicker(false);
                                                                 }}
-                                                            />
-                                                        )}
+                                                            >
+                                                                <Picker.Item label="Select a category" value="" />
+                                                                {CATEGORIES.map((category) => (
+                                                                    <Picker.Item 
+                                                                        key={category} 
+                                                                        label={category} 
+                                                                        value={category} 
+                                                                    />
+                                                                ))}
+                                                            </Picker>
+                                                        </View>
+                                                    )}
+                                                </View>
+
+                                                <View style={stylesAddListingScreen.formRow}>
+                                                    <Text style={stylesAddListingScreen.label}>Date</Text>
+                                                    <TouchableOpacity
+                                                        style={[
+                                                            stylesAddListingScreen.input,
+                                                            !values.date && stylesAddListingScreen.requiredInput
+                                                        ]}
+                                                        onPress={() => setShowDatePicker(true)}
+                                                    >
+                                                        <Text style={stylesAddListingScreen.inputText}>
+                                                            {values.date || 'Select Date *'}
+                                                        </Text>
+                                                    </TouchableOpacity>
+                                                    {showDatePicker && (
+                                                        <DateTimePicker
+                                                            value={values.date ? new Date(values.date) : new Date()}
+                                                            mode="date"
+                                                            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                                            minimumDate={new Date(2024, 0, 1)}
+                                                            onChange={(event, selectedDate) => {
+                                                                setShowDatePicker(false);
+                                                                if (selectedDate && event.type !== 'dismissed') {
+                                                                    setFieldValue('date', formatDate(selectedDate));
+                                                                }
+                                                            }}
+                                                        />
+                                                    )}
                                                 </View>
 
                                                 <View style={stylesAddListingScreen.formRow}>
@@ -270,13 +465,35 @@ const AddListingScreen = () => {
 
                                                 <View style={stylesAddListingScreen.formRow}>
                                                     <Text style={stylesAddListingScreen.label}>Location</Text>
-                                                    <TextInput
-                                                        style={stylesAddListingScreen.input}
-                                                        placeholder="Location"
-                                                        value={values.location}
-                                                        onChangeText={handleChange('location')}
-                                                        onBlur={handleBlur('location')}
-                                                    />
+                                                    {values.listingType === 'found' ? (
+                                                        <TouchableOpacity
+                                                            style={[
+                                                                stylesAddListingScreen.input,
+                                                                !values.location && stylesAddListingScreen.requiredInput
+                                                            ]}
+                                                            onPress={async () => {
+                                                                const location = await getCurrentLocation();
+                                                                if (location) {
+                                                                    setFieldValue('location', location);
+                                                                }
+                                                            }}
+                                                        >
+                                                            <Text style={stylesAddListingScreen.inputText}>
+                                                                {values.location || 'Get Current Location *'}
+                                                            </Text>
+                                                        </TouchableOpacity>
+                                                    ) : (
+                                                        <TextInput
+                                                            style={[
+                                                                stylesAddListingScreen.input,
+                                                                !values.location && stylesAddListingScreen.requiredInput
+                                                            ]}
+                                                            placeholder="Enter location where you lost the item *"
+                                                            value={values.location}
+                                                            onChangeText={handleChange('location')}
+                                                            onBlur={handleBlur('location')}
+                                                        />
+                                                    )}
                                                 </View>
 
                                                 <View style={stylesAddListingScreen.formRow}>

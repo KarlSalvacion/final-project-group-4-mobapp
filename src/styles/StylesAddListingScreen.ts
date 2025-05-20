@@ -180,4 +180,29 @@ export const stylesAddListingScreen = StyleSheet.create({
     typeToggleTextInactive: {
         color: 'rgb(25, 153, 100)',
     },
+    pickerContainer: {
+        backgroundColor: '#fff',
+        borderTopWidth: 1,
+        borderTopColor: '#ddd',
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
+    },
+    pickerHeader: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        padding: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: '#ddd',
+    },
+    pickerButton: {
+        padding: 10,
+    },
+    pickerButtonText: {
+        color: '#007AFF',
+        fontSize: 16,
+        fontWeight: '600',
+    },
 });
