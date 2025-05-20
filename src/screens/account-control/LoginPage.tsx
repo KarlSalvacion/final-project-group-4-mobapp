@@ -18,6 +18,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { Formik } from 'formik';
 import { loginValidationSchema } from '../../validation/ValidationSchema';
 import { Ionicons } from '@expo/vector-icons';
+import { BACKEND_BASE_URL } from '../../config/apiConfig';
 
 type RootStackParamList = {
     Login: undefined;
@@ -48,12 +49,9 @@ const LoginPage: React.FC = () => {
     try {
       setIsLoading(true);
 
-      // Make API call to backend
-      const response = await fetch('http://192.168.1.6:5000/api/users/login', {
+      const response = await fetch(`${BACKEND_BASE_URL}/api/users/login`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: values.email,
           password: values.password,
@@ -65,19 +63,23 @@ const LoginPage: React.FC = () => {
         throw new Error(errorData.message || 'Login failed');
       }
 
-      const userData = await response.json();
-      
-      // Determine user type
-      const userType = isAdminUser(values.email) ? 'admin' : 'user';
-      console.log('Logging in as:', userType); // Debug log
+      const data = await response.json();
+      const { token } = data;
 
-      // Login with user data and type
-      await login(values.email, userType, userData);
-      console.log('Login successful as:', userType); // Debug log
+      const userType = isAdminUser(values.email) ? 'admin' : 'user';
+      // Provide a dummy UserData object to satisfy the type
+      const dummyUserData = {
+        name: '',
+        username: '',
+        role: userType,
+        email: values.email,
+        createdAt: '',
+        profilePhoto: '',
+      };
+      await login(values.email, userType, dummyUserData, token);
 
     } catch (error) {
       Alert.alert('Error', error instanceof Error ? error.message : 'Login failed. Please try again.');
-      console.error('Login error:', error);
     } finally {
       setIsLoading(false);
     }

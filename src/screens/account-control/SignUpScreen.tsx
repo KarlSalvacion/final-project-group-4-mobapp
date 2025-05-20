@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -20,6 +20,8 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { signUpValidationSchema } from '../../validation/ValidationSchema';
 import { stylesSignUpScreen } from '../../styles/StylesSignUpScreen';
+import { BACKEND_BASE_URL } from '../../config/apiConfig';
+
 
 type RootStackParamList = {
     Login: undefined;
@@ -40,12 +42,20 @@ const SignUpScreen = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+    // Simple GET request for network debugging
+    useEffect(() => {
+        fetch(`${BACKEND_BASE_URL}/api/users/register`, { method: 'GET' })
+            .then(res => res.text())
+            .then(text => console.log('GET /api/users/register response:', text))
+            .catch(err => console.log('GET /api/users/register error:', err));
+    }, []);
+
     const handleSignUp = async (values: FormValues) => {
         try {
             setIsLoading(true);
             const userId = uuidv4();
             
-            const response = await fetch('http://192.168.1.6:5000/api/users/register', {
+            const response = await fetch(`${BACKEND_BASE_URL}/api/users/register`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
