@@ -23,9 +23,10 @@ const stylesProfileScreen = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         padding: 16,
-        paddingTop: Platform.OS === 'ios' ? 48 : 16,
+        paddingTop: Platform.OS === 'ios' ? 16 : 48,
         borderBottomWidth: 1,
         borderBottomColor: '#eee',
+        backgroundColor: 'fff',
     },
     backButton: {
         padding: 8,
@@ -41,7 +42,7 @@ const stylesProfileScreen = StyleSheet.create({
     },
     photoContainer: {
         alignItems: 'center',
-        marginBottom: 30,
+        marginBottom: 20,
     },
     infoContainer: {
         backgroundColor: '#f8f8f8',
@@ -68,6 +69,45 @@ const stylesProfileScreen = StyleSheet.create({
         fontSize: 16,
         color: '#333',
         fontWeight: '500',
+    },
+
+    buttonContainer: {
+        marginTop: 30,
+        paddingBottom: 16,
+        gap: 16,
+        width: '100%',
+    },
+
+    button: {
+        gap: 10,    
+        paddingVertical: 12,
+        borderRadius: 8,
+        alignItems: 'center',
+        flexDirection: 'row',
+        justifyContent: 'center',
+        borderWidth: 2,
+    },
+
+    logoutButton: {
+        backgroundColor: 'rgb(25, 153, 100)',
+        borderColor: 'rgb(25, 153, 100)',
+    },
+
+    deleteButton: {
+        backgroundColor: '#fff',
+        borderColor: '#ff4d4d',
+    },
+
+    buttonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+
+    deleteButtonText: { 
+        color: '#ff4d4d',
+        fontSize: 16,
+        fontWeight: '600',
     },
 });
 

@@ -133,7 +133,7 @@ const ProfileScreen = () => {
     }
 
     return (
-        <ScrollView style={stylesProfileScreen.container}>
+        <View style={stylesProfileScreen.container}>
             <View style={stylesProfileScreen.header}>
                 <TouchableOpacity 
                     style={stylesProfileScreen.backButton}
@@ -206,12 +206,12 @@ const ProfileScreen = () => {
                         style={[stylesProfileScreen.button, stylesProfileScreen.deleteButton]}
                         onPress={handleDeleteAccount}
                     >
-                        <Ionicons name="trash-outline" size={24} color="#fff" />
-                        <Text style={stylesProfileScreen.buttonText}>Delete Account</Text>
+                        <Ionicons name="trash-outline" size={24} color="#ff4d4d" />
+                        <Text style={stylesProfileScreen.deleteButtonText}>Delete Account</Text>
                     </TouchableOpacity>
                 </View>
             </View>
-        </ScrollView>
+        </View>
     );
 };
 
