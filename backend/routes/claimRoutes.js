@@ -67,7 +67,7 @@ router.post('/', upload.array('proofImages', 3), async (req, res) => {
     }
 
     // Upload proof images
-    const imageUrls = await uploadToCloudinary(req.files, 'claims');
+    const imageUrls = await uploadToCloudinary(req.files);
 
     // Create and save claim
     const claim = new Claim({
@@ -80,7 +80,6 @@ router.post('/', upload.array('proofImages', 3), async (req, res) => {
     await claim.save();
     res.status(201).json(claim);
   } catch (error) {
-    console.error('Error creating claim:', error);
     res.status(500).json({ message: 'Error creating claim', error: error.message });
   }
 });

@@ -14,6 +14,9 @@ import { useListings } from '../context/ListingContext';
 import { ListingType } from '../context/ListingContext';
 import { Picker } from '@react-native-picker/picker';
 import * as Location from 'expo-location';
+import { BACKEND_BASE_URL } from '../config/apiConfig';
+import { useAuth } from '../context/AuthContext';
+import { listingService } from '../services/listingService';
 
 type RootStackParamList = {
     Home: undefined;
@@ -22,7 +25,7 @@ type RootStackParamList = {
 
 type FormValues = {
     listingType: ListingType;
-    name: string;
+    title: string;
     description: string;
     date: string;
     time: string;
@@ -32,16 +35,20 @@ type FormValues = {
 };
 
 const CATEGORIES = [
-    'Electronics',
-    'Clothing',
-    'School Equipment',
-    'Personal Belongings',
-    'Miscellaneous'
+    'clothes',
+    'electronics',
+    'accessories',
+    'documents',
+    'books',
+    'jewelry',
+    'bags',
+    'other'
 ];
 
 const AddListingScreen = () => {
     const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
     const { addListing } = useListings();
+    const { token } = useAuth();
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [showTimePicker, setShowTimePicker] = useState(false);
     const [showCategoryPicker, setShowCategoryPicker] = useState(false);
@@ -94,6 +101,14 @@ const AddListingScreen = () => {
     };
 
     const handleSubmit = async (values: FormValues) => {
+        if (!token) {
+            Alert.alert(
+                "Authentication Error",
+                "Please log in to create a listing."
+            );
+            return;
+        }
+
         if (!values.date || !values.time) {
             Alert.alert(
                 "Validation Error",
@@ -103,87 +118,28 @@ const AddListingScreen = () => {
         }
 
         try {
-            // First, upload images to Cloudinary
-            const imageUrls = await Promise.all(
-                values.images.map(async (imageUri) => {
-                    try {
-                        const formData = new FormData();
-                        formData.append('file', {
-                            uri: imageUri,
-                            type: 'image/jpeg',
-                            name: 'image.jpg',
-                        } as any);
-                        formData.append('upload_preset', 'ml_default');
-                        formData.append('cloud_name', 'dl8ifxbsd');
-
-                        console.log('Uploading image to Cloudinary:', imageUri);
-                        const response = await fetch('https://api.cloudinary.com/v1_1/dl8ifxbsd/image/upload', {
-                            method: 'POST',
-                            body: formData,
-                            headers: {
-                                'Accept': 'application/json',
-                                'Content-Type': 'multipart/form-data',
-                            },
-                        });
-
-                        if (!response.ok) {
-                            const errorData = await response.text();
-                            console.error('Cloudinary upload failed:', errorData);
-                            throw new Error(`Failed to upload image: ${errorData}`);
-                        }
-
-                        const data = await response.json();
-                        console.log('Cloudinary upload successful:', data.secure_url);
-                        return data.secure_url;
-                    } catch (error) {
-                        console.error('Error in individual image upload:', error);
-                        throw error;
-                    }
-                })
-            );
-
-            console.log('All images uploaded successfully:', imageUrls);
-
-            // Create the listing with the correct schema
-            const listingData = {
-                title: values.name,
-                description: values.description,
-                category: values.listingType,
-                location: values.location,
-                date: new Date(`${values.date} ${values.time}`).toISOString(),
-                images: imageUrls,
-                status: 'active'
-            };
-
-            // Detailed console logging of the listing data
-            console.log('=== LISTING DATA BEING SUBMITTED ===');
-            console.log('Title:', listingData.title);
-            console.log('Description:', listingData.description);
-            console.log('Category:', listingData.category);
-            console.log('Location:', listingData.location);
-            console.log('Date:', listingData.date);
-            console.log('Images:', listingData.images);
-            console.log('Status:', listingData.status);
-            console.log('===================================');
-
-            console.log('Sending listing data to server:', listingData);
-
-            const response = await fetch('http://192.168.1.6:5000/api/listings', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(listingData),
+            // Create FormData for multipart/form-data
+            const formData = new FormData();
+            
+            // Append images
+            values.images.forEach((imageUri, index) => {
+                formData.append('images', {
+                    uri: imageUri,
+                    type: 'image/jpeg',
+                    name: `image${index}.jpg`,
+                } as any);
             });
 
-            if (!response.ok) {
-                const errorData = await response.text();
-                console.error('Server response error:', errorData);
-                throw new Error(`Failed to create listing: ${errorData}`);
-            }
+            // Append all required fields
+            formData.append('title', values.title);
+            formData.append('description', values.description);
+            formData.append('type', values.listingType);
+            formData.append('category', values.category);
+            formData.append('location', values.location);
+            formData.append('date', values.date);
+            formData.append('time', values.time);
 
-            const newListing = await response.json();
-            console.log('Listing created successfully:', newListing);
+            const newListing = await listingService.createListing(formData);
             addListing(newListing);
 
             Alert.alert(
@@ -223,7 +179,11 @@ const AddListingScreen = () => {
     };
 
     return (
-        <View style={stylesAddListingScreen.mainContainer}>
+        <KeyboardAvoidingView
+            style={stylesAddListingScreen.mainContainer}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
+        >
             <View style={stylesAddListingScreen.headerContainer}>
                 <TouchableOpacity 
                     style={stylesAddListingScreen.backButton}
@@ -234,17 +194,18 @@ const AddListingScreen = () => {
                 <Text style={stylesAddListingScreen.headerTitle}>Add Listing</Text>
             </View>
 
-            <View style={stylesAddListingScreen.contentContainer}>
-                <ScrollView 
-                    style={stylesAddListingScreen.scrollContainer}
-                    showsVerticalScrollIndicator={false}
-                    contentContainerStyle={{paddingBottom: 20}}
-                >
+            <ScrollView 
+                style={stylesAddListingScreen.scrollContainer}
+                showsVerticalScrollIndicator={true}
+                contentContainerStyle={{ paddingBottom: 100 }}
+                keyboardShouldPersistTaps="handled"
+            >
+                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                     <View style={stylesAddListingScreen.formContainer}>
                         <Formik<FormValues>
                             initialValues={{
                                 listingType: 'lost' as ListingType,
-                                name: '',
+                                title: '',
                                 description: '',
                                 date: '',
                                 time: '',
@@ -254,11 +215,21 @@ const AddListingScreen = () => {
                             }}
                             validationSchema={listingValidationSchema}
                             onSubmit={(values: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
+                                // Validate all required fields before submission
+                                if (!values.title || !values.description || !values.category || 
+                                    !values.location || !values.date || !values.time || 
+                                    values.images.length === 0) {
+                                    Alert.alert(
+                                        "Validation Error",
+                                        "Please fill in all required fields and add at least one image."
+                                    );
+                                    return;
+                                }
                                 handleSubmit(values);
                                 resetForm({
                                     values: {
                                         listingType: 'lost' as ListingType,
-                                        name: '',
+                                        title: '',
                                         description: '',
                                         date: '',
                                         time: '',
@@ -293,264 +264,256 @@ const AddListingScreen = () => {
                                 };
 
                                 return (
-                                    <KeyboardAvoidingView
-                                        style={stylesAddListingScreen.mainContainer}
-                                        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                                        keyboardVerticalOffset={Platform.OS === 'ios'? 80 : 0}
-                                    >
-                                        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                                            <View style={stylesAddListingScreen.form}>
-                                                <View style={stylesAddListingScreen.formRow}>
-                                                    <Text style={stylesAddListingScreen.label}>Type</Text>
-                                                    <View style={stylesAddListingScreen.typeToggleContainer}>
+                                    <View style={stylesAddListingScreen.form}>
+                                        <View style={stylesAddListingScreen.formRow}>
+                                            <Text style={stylesAddListingScreen.label}>Type</Text>
+                                            <View style={stylesAddListingScreen.typeToggleContainer}>
+                                                <TouchableOpacity
+                                                    style={[
+                                                        stylesAddListingScreen.typeToggleButton,
+                                                        values.listingType === 'lost' 
+                                                            ? stylesAddListingScreen.typeToggleActive 
+                                                            : stylesAddListingScreen.typeToggleInactive
+                                                    ]}
+                                                    onPress={() => setFieldValue('listingType', 'lost')}
+                                                >
+                                                    <Text style={[
+                                                        stylesAddListingScreen.typeToggleText,
+                                                        values.listingType === 'lost' 
+                                                            ? stylesAddListingScreen.typeToggleTextActive 
+                                                            : stylesAddListingScreen.typeToggleTextInactive
+                                                    ]}>
+                                                        Lost Item
+                                                    </Text>
+                                                </TouchableOpacity>
+                                                <TouchableOpacity
+                                                    style={[
+                                                        stylesAddListingScreen.typeToggleButton,
+                                                        values.listingType === 'found' 
+                                                            ? stylesAddListingScreen.typeToggleActive 
+                                                            : stylesAddListingScreen.typeToggleInactive
+                                                    ]}
+                                                    onPress={() => setFieldValue('listingType', 'found')}
+                                                >
+                                                    <Text style={[
+                                                        stylesAddListingScreen.typeToggleText,
+                                                        values.listingType === 'found' 
+                                                            ? stylesAddListingScreen.typeToggleTextActive 
+                                                            : stylesAddListingScreen.typeToggleTextInactive
+                                                    ]}>
+                                                        Found Item
+                                                    </Text>
+                                                </TouchableOpacity>
+                                            </View>
+                                        </View>
+
+                                        <View style={stylesAddListingScreen.formRow}>
+                                            <Text style={stylesAddListingScreen.label}>Name</Text>
+                                            <TextInput
+                                                style={stylesAddListingScreen.input}
+                                                placeholder="Name"
+                                                value={values.title}
+                                                onChangeText={handleChange('title')}
+                                                onBlur={handleBlur('title')}
+                                            />
+                                        </View>
+                                        <View style={stylesAddListingScreen.formRow}>
+                                            <Text style={stylesAddListingScreen.label}>Description</Text>
+                                            <TextInput
+                                                style={stylesAddListingScreen.input}
+                                                placeholder="Description"
+                                                value={values.description}
+                                                onChangeText={handleChange('description')}
+                                                onBlur={handleBlur('description')}
+                                            />
+                                        </View>
+
+                                        <View style={stylesAddListingScreen.formRow}>
+                                            <Text style={stylesAddListingScreen.label}>Category</Text>
+                                            <TouchableOpacity
+                                                style={[
+                                                    stylesAddListingScreen.input,
+                                                    !values.category && stylesAddListingScreen.requiredInput
+                                                ]}
+                                                onPress={() => setShowCategoryPicker(true)}
+                                            >
+                                                <Text style={stylesAddListingScreen.inputText}>
+                                                    {values.category || 'Select Category *'}
+                                                </Text>
+                                            </TouchableOpacity>
+                                            {showCategoryPicker && (
+                                                <View style={stylesAddListingScreen.pickerContainer}>
+                                                    <View style={stylesAddListingScreen.pickerHeader}>
                                                         <TouchableOpacity
-                                                            style={[
-                                                                stylesAddListingScreen.typeToggleButton,
-                                                                values.listingType === 'lost' 
-                                                                    ? stylesAddListingScreen.typeToggleActive 
-                                                                    : stylesAddListingScreen.typeToggleInactive
-                                                            ]}
-                                                            onPress={() => setFieldValue('listingType', 'lost')}
+                                                            onPress={() => setShowCategoryPicker(false)}
+                                                            style={stylesAddListingScreen.pickerButton}
                                                         >
-                                                            <Text style={[
-                                                                stylesAddListingScreen.typeToggleText,
-                                                                values.listingType === 'lost' 
-                                                                    ? stylesAddListingScreen.typeToggleTextActive 
-                                                                    : stylesAddListingScreen.typeToggleTextInactive
-                                                            ]}>
-                                                                Lost Item
-                                                            </Text>
-                                                        </TouchableOpacity>
-                                                        <TouchableOpacity
-                                                            style={[
-                                                                stylesAddListingScreen.typeToggleButton,
-                                                                values.listingType === 'found' 
-                                                                    ? stylesAddListingScreen.typeToggleActive 
-                                                                    : stylesAddListingScreen.typeToggleInactive
-                                                            ]}
-                                                            onPress={() => setFieldValue('listingType', 'found')}
-                                                        >
-                                                            <Text style={[
-                                                                stylesAddListingScreen.typeToggleText,
-                                                                values.listingType === 'found' 
-                                                                    ? stylesAddListingScreen.typeToggleTextActive 
-                                                                    : stylesAddListingScreen.typeToggleTextInactive
-                                                            ]}>
-                                                                Found Item
-                                                            </Text>
+                                                            <Text style={stylesAddListingScreen.pickerButtonText}>Done</Text>
                                                         </TouchableOpacity>
                                                     </View>
-                                                </View>
-
-                                                <View style={stylesAddListingScreen.formRow}>
-                                                    <Text style={stylesAddListingScreen.label}>Name</Text>
-                                                    <TextInput
-                                                        style={stylesAddListingScreen.input}
-                                                        placeholder="Name"
-                                                        value={values.name}
-                                                        onChangeText={handleChange('name')}
-                                                        onBlur={handleBlur('name')}
-                                                    />
-                                                </View>
-                                                <View style={stylesAddListingScreen.formRow}>
-                                                    <Text style={stylesAddListingScreen.label}>Description</Text>
-                                                    <TextInput
-                                                        style={stylesAddListingScreen.input}
-                                                        placeholder="Description"
-                                                        value={values.description}
-                                                        onChangeText={handleChange('description')}
-                                                        onBlur={handleBlur('description')}
-                                                    />
-                                                </View>
-
-                                                <View style={stylesAddListingScreen.formRow}>
-                                                    <Text style={stylesAddListingScreen.label}>Category</Text>
-                                                    <TouchableOpacity
-                                                        style={[
-                                                            stylesAddListingScreen.input,
-                                                            !values.category && stylesAddListingScreen.requiredInput
-                                                        ]}
-                                                        onPress={() => setShowCategoryPicker(true)}
+                                                    <Picker
+                                                        selectedValue={values.category}
+                                                        onValueChange={(itemValue) => {
+                                                            setFieldValue('category', itemValue);
+                                                            setShowCategoryPicker(false);
+                                                        }}
                                                     >
-                                                        <Text style={stylesAddListingScreen.inputText}>
-                                                            {values.category || 'Select Category *'}
-                                                        </Text>
-                                                    </TouchableOpacity>
-                                                    {showCategoryPicker && (
-                                                        <View style={stylesAddListingScreen.pickerContainer}>
-                                                            <View style={stylesAddListingScreen.pickerHeader}>
-                                                                <TouchableOpacity
-                                                                    onPress={() => setShowCategoryPicker(false)}
-                                                                    style={stylesAddListingScreen.pickerButton}
-                                                                >
-                                                                    <Text style={stylesAddListingScreen.pickerButtonText}>Done</Text>
-                                                                </TouchableOpacity>
-                                                            </View>
-                                                            <Picker
-                                                                selectedValue={values.category}
-                                                                onValueChange={(itemValue) => {
-                                                                    setFieldValue('category', itemValue);
-                                                                    setShowCategoryPicker(false);
-                                                                }}
-                                                            >
-                                                                <Picker.Item label="Select a category" value="" />
-                                                                {CATEGORIES.map((category) => (
-                                                                    <Picker.Item 
-                                                                        key={category} 
-                                                                        label={category} 
-                                                                        value={category} 
-                                                                    />
-                                                                ))}
-                                                            </Picker>
-                                                        </View>
-                                                    )}
-                                                </View>
-
-                                                <View style={stylesAddListingScreen.formRow}>
-                                                    <Text style={stylesAddListingScreen.label}>Date</Text>
-                                                    <TouchableOpacity
-                                                        style={[
-                                                            stylesAddListingScreen.input,
-                                                            !values.date && stylesAddListingScreen.requiredInput
-                                                        ]}
-                                                        onPress={() => setShowDatePicker(true)}
-                                                    >
-                                                        <Text style={stylesAddListingScreen.inputText}>
-                                                            {values.date || 'Select Date *'}
-                                                        </Text>
-                                                    </TouchableOpacity>
-                                                    {showDatePicker && (
-                                                        <DateTimePicker
-                                                            value={values.date ? new Date(values.date) : new Date()}
-                                                            mode="date"
-                                                            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                                                            minimumDate={new Date(2024, 0, 1)}
-                                                            onChange={(event, selectedDate) => {
-                                                                setShowDatePicker(false);
-                                                                if (selectedDate && event.type !== 'dismissed') {
-                                                                    setFieldValue('date', formatDate(selectedDate));
-                                                                }
-                                                            }}
-                                                        />
-                                                    )}
-                                                </View>
-
-                                                <View style={stylesAddListingScreen.formRow}>
-                                                    <Text style={stylesAddListingScreen.label}>Time</Text>
-                                                    <TouchableOpacity
-                                                        style={[
-                                                            stylesAddListingScreen.input,
-                                                            !values.time && stylesAddListingScreen.requiredInput
-                                                        ]}
-                                                        onPress={() => setShowTimePicker(true)}
-                                                    >
-                                                        <Text style={stylesAddListingScreen.inputText}>
-                                                            {values.time || 'Select Time *'}
-                                                        </Text>
-                                                    </TouchableOpacity>
-                                                    {showTimePicker && (
-                                                        <DateTimePicker
-                                                            value={values.time ? new Date(`1970-01-01T${values.time}`) : new Date()}
-                                                            mode="time"
-                                                            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                                                            onChange={(event, selectedDate) => {
-                                                                setShowTimePicker(false);
-                                                                if (selectedDate && event.type !== 'dismissed') {
-                                                                    setFieldValue('time', formatTime(selectedDate));
-                                                                }
-                                                            }}
-                                                        />
-                                                    )}
-                                                </View>
-
-                                                <View style={stylesAddListingScreen.formRow}>
-                                                    <Text style={stylesAddListingScreen.label}>Location</Text>
-                                                    {values.listingType === 'found' ? (
-                                                        <TouchableOpacity
-                                                            style={[
-                                                                stylesAddListingScreen.input,
-                                                                !values.location && stylesAddListingScreen.requiredInput
-                                                            ]}
-                                                            onPress={async () => {
-                                                                const location = await getCurrentLocation();
-                                                                if (location) {
-                                                                    setFieldValue('location', location);
-                                                                }
-                                                            }}
-                                                        >
-                                                            <Text style={stylesAddListingScreen.inputText}>
-                                                                {values.location || 'Get Current Location *'}
-                                                            </Text>
-                                                        </TouchableOpacity>
-                                                    ) : (
-                                                        <TextInput
-                                                            style={[
-                                                                stylesAddListingScreen.input,
-                                                                !values.location && stylesAddListingScreen.requiredInput
-                                                            ]}
-                                                            placeholder="Enter location where you lost the item *"
-                                                            value={values.location}
-                                                            onChangeText={handleChange('location')}
-                                                            onBlur={handleBlur('location')}
-                                                        />
-                                                    )}
-                                                </View>
-
-                                                <View style={stylesAddListingScreen.formRow}>
-                                                    <Text style={stylesAddListingScreen.label}>Images ({values.images.length}/5)</Text>
-                                                    <TouchableOpacity
-                                                        style={stylesAddListingScreen.imageInput}
-                                                        onPress={pickImageAsync}
-                                                    >
-                                                        <Text style={stylesAddListingScreen.imageInputText}>
-                                                            {values.images.length === 0 ? 'Select images' : 'Add more images'}
-                                                        </Text>
-                                                    </TouchableOpacity>
-                                                    
-                                                    <ScrollView 
-                                                        horizontal 
-                                                        showsHorizontalScrollIndicator={false}
-                                                        style={stylesAddListingScreen.imageScrollView}
-                                                    >
-                                                        {values.images.map((image: string, index: number) => (
-                                                            <ImagePreview 
-                                                                key={index}
-                                                                image={image} 
-                                                                onDelete={() => removeImage(index)}
+                                                        <Picker.Item label="Select a category" value="" />
+                                                        {CATEGORIES.map((category) => (
+                                                            <Picker.Item 
+                                                                key={category} 
+                                                                label={category} 
+                                                                value={category} 
                                                             />
                                                         ))}
-                                                    </ScrollView>
-                                                    
-                                                    {errors.images && (
-                                                        <Text style={stylesAddListingScreen.errorText}>{errors.images}</Text>
-                                                    )}
+                                                    </Picker>
                                                 </View>
+                                            )}
+                                        </View>
 
+                                        <View style={stylesAddListingScreen.formRow}>
+                                            <Text style={stylesAddListingScreen.label}>Date</Text>
+                                            <TouchableOpacity
+                                                style={[
+                                                    stylesAddListingScreen.input,
+                                                    !values.date && stylesAddListingScreen.requiredInput
+                                                ]}
+                                                onPress={() => setShowDatePicker(true)}
+                                            >
+                                                <Text style={stylesAddListingScreen.inputText}>
+                                                    {values.date || 'Select Date *'}
+                                                </Text>
+                                            </TouchableOpacity>
+                                            {showDatePicker && (
+                                                <DateTimePicker
+                                                    value={values.date ? new Date(values.date) : new Date()}
+                                                    mode="date"
+                                                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                                    minimumDate={new Date(2024, 0, 1)}
+                                                    onChange={(event, selectedDate) => {
+                                                        setShowDatePicker(false);
+                                                        if (selectedDate && event.type !== 'dismissed') {
+                                                            setFieldValue('date', formatDate(selectedDate));
+                                                        }
+                                                    }}
+                                                />
+                                            )}
+                                        </View>
+
+                                        <View style={stylesAddListingScreen.formRow}>
+                                            <Text style={stylesAddListingScreen.label}>Time</Text>
+                                            <TouchableOpacity
+                                                style={[
+                                                    stylesAddListingScreen.input,
+                                                    !values.time && stylesAddListingScreen.requiredInput
+                                                ]}
+                                                onPress={() => setShowTimePicker(true)}
+                                            >
+                                                <Text style={stylesAddListingScreen.inputText}>
+                                                    {values.time || 'Select Time *'}
+                                                </Text>
+                                            </TouchableOpacity>
+                                            {showTimePicker && (
+                                                <DateTimePicker
+                                                    value={values.time ? new Date(`1970-01-01T${values.time}`) : new Date()}
+                                                    mode="time"
+                                                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                                    onChange={(event, selectedDate) => {
+                                                        setShowTimePicker(false);
+                                                        if (selectedDate && event.type !== 'dismissed') {
+                                                            setFieldValue('time', formatTime(selectedDate));
+                                                        }
+                                                    }}
+                                                />
+                                            )}
+                                        </View>
+
+                                        <View style={stylesAddListingScreen.formRow}>
+                                            <Text style={stylesAddListingScreen.label}>Location</Text>
+                                            {values.listingType === 'found' ? (
                                                 <TouchableOpacity
-                                                    style={stylesAddListingScreen.submitButton}
-                                                    onPress={() => {
-                                                        if (Object.keys(errors).length === 0) {
-                                                            handleSubmit();
-                                                        } else {
-                                                            Alert.alert(
-                                                                "Validation Error",
-                                                                "Please fill in all required fields correctly."
-                                                            );
+                                                    style={[
+                                                        stylesAddListingScreen.input,
+                                                        !values.location && stylesAddListingScreen.requiredInput
+                                                    ]}
+                                                    onPress={async () => {
+                                                        const location = await getCurrentLocation();
+                                                        if (location) {
+                                                            setFieldValue('location', location);
                                                         }
                                                     }}
                                                 >
-                                                    <Text style={stylesAddListingScreen.submitButtonText}>Submit</Text>
+                                                    <Text style={stylesAddListingScreen.inputText}>
+                                                        {values.location || 'Get Current Location *'}
+                                                    </Text>
                                                 </TouchableOpacity>
-                                            </View>
-                                        </TouchableWithoutFeedback>
-                                    </KeyboardAvoidingView>
+                                            ) : (
+                                                <TextInput
+                                                    style={[
+                                                        stylesAddListingScreen.input,
+                                                        !values.location && stylesAddListingScreen.requiredInput
+                                                    ]}
+                                                    placeholder="Enter location where you lost the item *"
+                                                    value={values.location}
+                                                    onChangeText={handleChange('location')}
+                                                    onBlur={handleBlur('location')}
+                                                />
+                                            )}
+                                        </View>
+
+                                        <View style={stylesAddListingScreen.formRow}>
+                                            <Text style={stylesAddListingScreen.label}>Images ({values.images.length}/5)</Text>
+                                            <TouchableOpacity
+                                                style={stylesAddListingScreen.imageInput}
+                                                onPress={pickImageAsync}
+                                            >
+                                                <Text style={stylesAddListingScreen.imageInputText}>
+                                                    {values.images.length === 0 ? 'Select images' : 'Add more images'}
+                                                </Text>
+                                            </TouchableOpacity>
+                                            
+                                            <ScrollView 
+                                                horizontal 
+                                                showsHorizontalScrollIndicator={false}
+                                                style={stylesAddListingScreen.imageScrollView}
+                                            >
+                                                {values.images.map((image: string, index: number) => (
+                                                    <ImagePreview 
+                                                        key={index}
+                                                        image={image} 
+                                                        onDelete={() => removeImage(index)}
+                                                    />
+                                                ))}
+                                            </ScrollView>
+                                            
+                                            {errors.images && (
+                                                <Text style={stylesAddListingScreen.errorText}>{errors.images}</Text>
+                                            )}
+                                        </View>
+
+                                        <TouchableOpacity
+                                            style={stylesAddListingScreen.submitButton}
+                                            onPress={() => {
+                                                if (Object.keys(errors).length === 0) {
+                                                    handleSubmit();
+                                                } else {
+                                                    Alert.alert(
+                                                        "Validation Error",
+                                                        "Please fill in all required fields correctly."
+                                                    );
+                                                }
+                                            }}
+                                        >
+                                            <Text style={stylesAddListingScreen.submitButtonText}>Submit</Text>
+                                        </TouchableOpacity>
+                                    </View>
                                 );
                             }}
                         </Formik>
                     </View>
-                </ScrollView>
-            </View>
-        </View>
+                </TouchableWithoutFeedback>
+            </ScrollView>
+        </KeyboardAvoidingView>
     );
 }
 

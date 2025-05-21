@@ -23,9 +23,10 @@ const stylesProfileScreen = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         padding: 16,
-        paddingTop: Platform.OS === 'ios' ? 48 : 16,
+        paddingTop: Platform.OS === 'ios' ? 16 : 48,
         borderBottomWidth: 1,
         borderBottomColor: '#eee',
+        backgroundColor: 'fff',
     },
     backButton: {
         padding: 8,
@@ -41,7 +42,7 @@ const stylesProfileScreen = StyleSheet.create({
     },
     photoContainer: {
         alignItems: 'center',
-        marginBottom: 30,
+        marginBottom: 20,
     },
     infoContainer: {
         backgroundColor: '#f8f8f8',
@@ -68,30 +69,6 @@ const stylesProfileScreen = StyleSheet.create({
         fontSize: 16,
         color: '#333',
         fontWeight: '500',
-    },
-    buttonContainer: {
-        marginTop: 30,
-        paddingHorizontal: 20,
-        gap: 12,
-    },
-    button: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 16,
-        borderRadius: 12,
-        gap: 8,
-    },
-    logoutButton: {
-        backgroundColor: '#666',
-    },
-    deleteButton: {
-        backgroundColor: '#dc3545',
-    },
-    buttonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: '600',
     },
 });
 

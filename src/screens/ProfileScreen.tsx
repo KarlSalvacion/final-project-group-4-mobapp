@@ -27,6 +27,21 @@ const ProfileScreen = () => {
     const navigation = useNavigation<NavigationProp>();
     const { userData, logout, token } = useAuth();
 
+    const formatDate = (dateString: string | undefined) => {
+        if (!dateString) return 'Not available';
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        } catch (error) {
+            console.error('Date formatting error:', error);
+            return 'Invalid date';
+        }
+    };
+
     const handleLogout = () => {
         Alert.alert(
             'Logout',
@@ -65,7 +80,6 @@ const ProfileScreen = () => {
                     style: 'destructive',
                     onPress: async () => {
                         try {
-                            console.log('Attempting to delete account...');
                             const response = await fetch(`${BACKEND_BASE_URL}/api/users/delete-account`, {
                                 method: 'DELETE',
                                 headers: {
@@ -77,22 +91,9 @@ const ProfileScreen = () => {
                                 }),
                             });
 
-                            console.log('Response status:', response.status);
-                            
-                            // Check if the response is JSON
-                            const contentType = response.headers.get('content-type');
-                            if (contentType && contentType.includes('application/json')) {
+                            if (!response.ok) {
                                 const errorData = await response.json();
-                                if (!response.ok) {
-                                    throw new Error(errorData.message || 'Failed to delete account');
-                                }
-                            } else {
-                                // If response is not JSON, get the text
-                                const text = await response.text();
-                                console.log('Non-JSON response:', text);
-                                if (!response.ok) {
-                                    throw new Error('Server error occurred while deleting account');
-                                }
+                                throw new Error(errorData.message || 'Failed to delete account');
                             }
 
                             await logout();
@@ -132,7 +133,7 @@ const ProfileScreen = () => {
     }
 
     return (
-        <ScrollView style={stylesProfileScreen.container}>
+        <View style={stylesProfileScreen.container}>
             <View style={stylesProfileScreen.header}>
                 <TouchableOpacity 
                     style={stylesProfileScreen.backButton}
@@ -153,7 +154,7 @@ const ProfileScreen = () => {
                         <Ionicons name="person-outline" size={24} color="#666" />
                         <View style={stylesProfileScreen.infoTextContainer}>
                             <Text style={stylesProfileScreen.infoLabel}>Name</Text>
-                            <Text style={stylesProfileScreen.infoValue}>{userData.name}</Text>
+                            <Text style={stylesProfileScreen.infoValue}>{userData.name || 'Not set'}</Text>
                         </View>
                     </View>
 
@@ -161,7 +162,7 @@ const ProfileScreen = () => {
                         <Ionicons name="at-outline" size={24} color="#666" />
                         <View style={stylesProfileScreen.infoTextContainer}>
                             <Text style={stylesProfileScreen.infoLabel}>Username</Text>
-                            <Text style={stylesProfileScreen.infoValue}>{userData.username}</Text>
+                            <Text style={stylesProfileScreen.infoValue}>{userData.username || 'Not set'}</Text>
                         </View>
                     </View>
 
@@ -169,7 +170,7 @@ const ProfileScreen = () => {
                         <Ionicons name="shield-outline" size={24} color="#666" />
                         <View style={stylesProfileScreen.infoTextContainer}>
                             <Text style={stylesProfileScreen.infoLabel}>Role</Text>
-                            <Text style={stylesProfileScreen.infoValue}>{userData.role}</Text>
+                            <Text style={stylesProfileScreen.infoValue}>{userData.role || 'user'}</Text>
                         </View>
                     </View>
 
@@ -177,7 +178,7 @@ const ProfileScreen = () => {
                         <Ionicons name="mail-outline" size={24} color="#666" />
                         <View style={stylesProfileScreen.infoTextContainer}>
                             <Text style={stylesProfileScreen.infoLabel}>Email</Text>
-                            <Text style={stylesProfileScreen.infoValue}>{userData.email}</Text>
+                            <Text style={stylesProfileScreen.infoValue}>{userData.email || 'Not set'}</Text>
                         </View>
                     </View>
 
@@ -186,7 +187,7 @@ const ProfileScreen = () => {
                         <View style={stylesProfileScreen.infoTextContainer}>
                             <Text style={stylesProfileScreen.infoLabel}>Account Created</Text>
                             <Text style={stylesProfileScreen.infoValue}>
-                                {new Date(userData.createdAt).toLocaleDateString()}
+                                {formatDate(userData.createdAt)}
                             </Text>
                         </View>
                     </View>
@@ -205,12 +206,12 @@ const ProfileScreen = () => {
                         style={[stylesProfileScreen.button, stylesProfileScreen.deleteButton]}
                         onPress={handleDeleteAccount}
                     >
-                        <Ionicons name="trash-outline" size={24} color="#fff" />
-                        <Text style={stylesProfileScreen.buttonText}>Delete Account</Text>
+                        <Ionicons name="trash-outline" size={24} color="#ff4d4d" />
+                        <Text style={stylesProfileScreen.deleteButtonText}>Delete Account</Text>
                     </TouchableOpacity>
                 </View>
             </View>
-        </ScrollView>
+        </View>
     );
 };
 

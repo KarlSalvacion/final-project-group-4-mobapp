@@ -1,3 +1,4 @@
+import { Picker } from "@react-native-picker/picker";
 import { StyleSheet } from "react-native";
 
 export const stylesAddListingScreen = StyleSheet.create({
@@ -99,7 +100,33 @@ export const stylesAddListingScreen = StyleSheet.create({
         fontSize: 14,
         color: '#333',
     },
+    pickerContainer: {  
+        width: '100%',
+        height: 40,
+        borderWidth: 1,
+        borderColor: 'gray',
+        borderRadius: 5,
+        justifyContent: 'center',
+    },
 
+    pickerHeader: { 
+        backgroundColor: 'red',
+    },
+
+    pickerButton: {
+        width: '100%',
+        height: 40,
+        borderWidth: 1,
+        borderColor: 'gray',
+        borderRadius: 5,
+        justifyContent: 'center',
+    },
+
+    pickerButtonText: { 
+        fontSize: 14,
+        color: '#333',
+    },
+    
     imageInput: {
         width: '100%',
         height: 40,
@@ -179,30 +206,5 @@ export const stylesAddListingScreen = StyleSheet.create({
     },
     typeToggleTextInactive: {
         color: 'rgb(25, 153, 100)',
-    },
-    pickerContainer: {
-        backgroundColor: '#fff',
-        borderTopWidth: 1,
-        borderTopColor: '#ddd',
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        zIndex: 1000,
-    },
-    pickerHeader: {
-        flexDirection: 'row',
-        justifyContent: 'flex-end',
-        padding: 10,
-        borderBottomWidth: 1,
-        borderBottomColor: '#ddd',
-    },
-    pickerButton: {
-        padding: 10,
-    },
-    pickerButtonText: {
-        color: '#007AFF',
-        fontSize: 16,
-        fontWeight: '600',
     },
 });

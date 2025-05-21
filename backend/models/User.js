@@ -28,10 +28,19 @@ const userSchema = new mongoose.Schema({
     role: {
         type: String,
         enum: ['user', 'admin'],
-        default: 'user'
+        default: 'user',
+        required: true
     }
 }, {
     timestamps: true
+});
+
+// Pre-save middleware to ensure role is set
+userSchema.pre('save', function(next) {
+    if (!this.role) {
+        this.role = 'user';
+    }
+    next();
 });
 
 module.exports = mongoose.model('User', userSchema); 

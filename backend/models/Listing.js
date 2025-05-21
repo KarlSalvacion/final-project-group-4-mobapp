@@ -15,10 +15,15 @@ const listingSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    category: {
+    type: {
         type: String,
         required: true,
         enum: ['lost', 'found']
+    },
+    category: {
+        type: String,
+        required: true,
+        enum: ['clothes', 'electronics', 'accessories', 'documents', 'books', 'jewelry', 'bags', 'other']
     },
     location: {
         type: String,
@@ -26,6 +31,10 @@ const listingSchema = new mongoose.Schema({
     },
     date: {
         type: Date,
+        required: true
+    },
+    time: {
+        type: String,
         required: true
     },
     images: {

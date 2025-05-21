@@ -1,13 +1,30 @@
 import * as Yup from 'yup';
 
 export const listingValidationSchema = Yup.object().shape({
-    listingType: Yup.string().oneOf(['lost', 'found'], 'Type must be either lost or found').required('Type is required'),
-    name: Yup.string().required('Name is required'),
-    description: Yup.string().required('Description is required'),
-    date: Yup.string().required('Date is required'),
-    time: Yup.string().required('Time is required'),
-    location: Yup.string().required('Location is required'),
-    images: Yup.array().min(1, 'At least one image is required').max(5, 'Maximum 5 images allowed'),
+    listingType: Yup.string()
+        .oneOf(['lost', 'found'], 'Type must be either lost or found')
+        .required('Type is required'),
+    title: Yup.string()
+        .required('Title is required')
+        .trim(),
+    description: Yup.string()
+        .required('Description is required'),
+    category: Yup.string()
+        .oneOf(
+            ['clothes', 'electronics', 'accessories', 'documents', 'books', 'jewelry', 'bags', 'other'],
+            'Please select a valid category'
+        )
+        .required('Category is required'),
+    date: Yup.string()
+        .required('Date is required'),
+    time: Yup.string()
+        .required('Time is required'),
+    location: Yup.string()
+        .required('Location is required'),
+    images: Yup.array()
+        .min(1, 'At least one image is required')
+        .max(5, 'Maximum 5 images allowed')
+        .required('At least one image is required'),
 });
 
 export const signUpValidationSchema = Yup.object().shape({
