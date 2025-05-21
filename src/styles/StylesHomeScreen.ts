@@ -6,33 +6,36 @@ export const stylesHomeScreen = StyleSheet.create({
         backgroundColor: '#fff',
     },
     headerContainer: {
-        height: 100,
-        width: '100%',
-        alignItems: 'center',
-        justifyContent: 'space-between',
         flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        height: 120,
+        width: '100%',
         backgroundColor: 'rgb(25, 153, 100)',
         paddingHorizontal: 20,
     },
-    headerTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#fff',
+    headerContent: {
+        flexDirection: 'row',
+        justifyContent: 'flex-start',
+        alignItems: 'center',
+    },
+    headerLogo: {
+        width: 180,
+        height: 100,
     },
     profileButton: {
-        padding: 5,
-    },
-    profileIcon: {
-        fontSize: 24,
-        color: '#fff',
+        padding: 8,
+        borderRadius: 20,
+        backgroundColor: 'rgba(255, 255, 255, 0.2)',
     },
     contentContainer: {
         flex: 1,
         width: '100%',
     },
     listContainer: {
-        padding: 16,
+        padding: 20,
         width: '100%',
+        gap: 15,
     },
     emptyContainer: {
         alignItems: 'center',
@@ -65,11 +68,6 @@ export const stylesHomeScreen = StyleSheet.create({
         shadowRadius: 3.84,
         elevation: 5,
     },
-    addListingText: {
-        color: '#fff',
-        fontSize: 24,
-        fontWeight: 'bold',
-    },
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
@@ -88,7 +86,7 @@ export const stylesHomeScreen = StyleSheet.create({
         marginBottom: 16,
     },
     retryButton: {
-        backgroundColor: '#007AFF',
+        backgroundColor: 'rgb(25, 153, 100)',
         paddingHorizontal: 20,
         paddingVertical: 10,
         borderRadius: 8,
@@ -96,6 +94,6 @@ export const stylesHomeScreen = StyleSheet.create({
     retryButtonText: {
         color: '#fff',
         fontSize: 16,
-        fontWeight: '600',
+        fontWeight: '500',
     },
 });

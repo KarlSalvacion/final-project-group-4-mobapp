@@ -1,23 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BACKEND_BASE_URL } from '../config/apiConfig';
-
-interface UserData {
-    name: string;
-    username: string;
-    role: string;
-    email: string;
-    createdAt: string;
-    profilePhoto?: string;
-}
+import { User } from '../types';
 
 interface AuthContextType {
     isAuthenticated: boolean;
-    userType: 'admin' | 'user' | null;
-    userData: UserData | null;
+    user: User | null;
     token: string | null;
-    login: (email: string, userType: 'admin' | 'user', userData: UserData, token: string) => Promise<void>;
-    logout: () => void;
+    login: (email: string, userData: User, token: string) => Promise<void>;
+    logout: () => Promise<void>;
     isLoading: boolean;
 }
 
@@ -25,10 +16,23 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [userType, setUserType] = useState<'admin' | 'user' | null>(null);
-    const [userData, setUserData] = useState<UserData | null>(null);
+    const [user, setUser] = useState<User | null>(null);
     const [token, setToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+
+    const validateToken = async (token: string): Promise<boolean> => {
+        try {
+            const response = await fetch(`${BACKEND_BASE_URL}/api/users/check-token`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+            return response.ok;
+        } catch (error) {
+            console.error('Error validating token:', error);
+            return false;
+        }
+    };
 
     // Check for existing auth data on app start
     useEffect(() => {
@@ -36,39 +40,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             try {
                 const storedToken = await AsyncStorage.getItem('jwtToken');
                 const storedUserData = await AsyncStorage.getItem('userData');
-                const storedUserType = await AsyncStorage.getItem('userType');
 
-                if (storedToken && storedUserData && storedUserType) {
-                    // Validate token with backend
-                    const response = await fetch(`${BACKEND_BASE_URL}/api/users/check-token`, {
-                        headers: {
-                            'Authorization': `Bearer ${storedToken}`,
-                        },
-                    });
-
-                    if (response.ok) {
-                        const data = await response.json();
+                if (storedToken && storedUserData) {
+                    const isValid = await validateToken(storedToken);
+                    
+                    if (isValid) {
                         setToken(storedToken);
-                        setUserData(JSON.parse(storedUserData));
-                        setUserType(storedUserType as 'admin' | 'user');
+                        setUser(JSON.parse(storedUserData));
                         setIsAuthenticated(true);
                     } else {
-                        // Token is invalid, clear stored data
-                        await AsyncStorage.multiRemove(['jwtToken', 'userData', 'userType']);
-                        setToken(null);
-                        setUserData(null);
-                        setUserType(null);
-                        setIsAuthenticated(false);
+                        await logout();
                     }
                 }
             } catch (error) {
                 console.error('Error loading stored auth data:', error);
-                // Clear stored data on error
-                await AsyncStorage.multiRemove(['jwtToken', 'userData', 'userType']);
-                setToken(null);
-                setUserData(null);
-                setUserType(null);
-                setIsAuthenticated(false);
+                await logout();
             } finally {
                 setIsLoading(false);
             }
@@ -77,19 +63,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loadStoredAuth();
     }, []);
 
-    const login = async (email: string, userType: 'admin' | 'user', userData: UserData, token: string) => {
+    const login = async (email: string, userData: User, token: string) => {
         try {
             setIsAuthenticated(true);
-            setUserType(userType);
-            setUserData(userData);
+            setUser(userData);
             setToken(token);
             
-            // Store auth data
             await AsyncStorage.setItem('jwtToken', token);
             await AsyncStorage.setItem('userData', JSON.stringify(userData));
-            await AsyncStorage.setItem('userType', userType);
         } catch (error) {
-            console.error('Error storing auth data:', error);
+            console.error('Error during login:', error);
             throw error;
         }
     };
@@ -97,12 +80,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const logout = async () => {
         try {
             setIsAuthenticated(false);
-            setUserType(null);
-            setUserData(null);
+            setUser(null);
             setToken(null);
             
-            // Clear stored auth data
-            await AsyncStorage.multiRemove(['jwtToken', 'userData', 'userType']);
+            await AsyncStorage.multiRemove(['jwtToken', 'userData']);
         } catch (error) {
             console.error('Error clearing auth data:', error);
             throw error;
@@ -110,7 +91,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     return (
-        <AuthContext.Provider value={{ isAuthenticated, userType, userData, token, login, logout, isLoading }}>
+        <AuthContext.Provider value={{ isAuthenticated, user, token, login, logout, isLoading }}>
             {children}
         </AuthContext.Provider>
     );

@@ -28,7 +28,10 @@ app.use('/api/admin', authenticateToken, adminRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error('Error:', err);
+  if (err.name === 'MulterError') {
+    return res.status(400).json({ message: 'File upload error', error: err.message });
+  }
   res.status(500).json({ message: 'Something went wrong!', error: err.message });
 });
 

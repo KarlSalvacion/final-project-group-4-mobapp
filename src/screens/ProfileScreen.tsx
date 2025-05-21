@@ -2,11 +2,10 @@ import React from 'react';
 import {
     View,
     Text,
-    StyleSheet,
     TouchableOpacity,
     ScrollView,
-    Platform,
     Alert,
+    Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
@@ -25,7 +24,7 @@ type NavigationProp = StackNavigationProp<RootStackParamList>;
 
 const ProfileScreen = () => {
     const navigation = useNavigation<NavigationProp>();
-    const { userData, logout, token } = useAuth();
+    const { user, logout, token } = useAuth();
 
     const formatDate = (dateString: string | undefined) => {
         if (!dateString) return 'Not available';
@@ -87,7 +86,7 @@ const ProfileScreen = () => {
                                     'Authorization': `Bearer ${token}`,
                                 },
                                 body: JSON.stringify({
-                                    email: userData?.email,
+                                    email: user?.email,
                                 }),
                             });
 
@@ -115,16 +114,17 @@ const ProfileScreen = () => {
         );
     };
 
-    if (!userData) {
+    if (!user) {
         return (
             <View style={stylesProfileScreen.errorContainer}>
-                <View style={stylesProfileScreen.errorHeader}>
-                    <TouchableOpacity
-                        style={stylesProfileScreen.backButton}
-                        onPress={() => navigation.goBack()}
-                    >
-                        <Ionicons name="arrow-back" size={24} color="#333" />
-                    </TouchableOpacity>
+                <View style={stylesProfileScreen.headerContainer}>
+                    <View style={stylesProfileScreen.headerContent}>
+                        <Image 
+                            source={require('../assets/looke_logo.png')}
+                            style={stylesProfileScreen.headerLogo}
+                            resizeMode="contain"
+                        />
+                    </View>
                 </View>
                 <Ionicons name="alert-circle-outline" size={50} color="#f00" />
                 <Text style={stylesProfileScreen.errorText}>No user data available</Text>
@@ -133,84 +133,86 @@ const ProfileScreen = () => {
     }
 
     return (
-        <View style={stylesProfileScreen.container}>
-            <View style={stylesProfileScreen.header}>
-                <TouchableOpacity 
-                    style={stylesProfileScreen.backButton}
-                    onPress={() => navigation.goBack()}
-                >
-                    <Ionicons name="arrow-back" size={24} color="#333" />
-                </TouchableOpacity>
-                <Text style={stylesProfileScreen.headerTitle}>Profile</Text>
-            </View>
-
-            <View style={stylesProfileScreen.profileSection}>
-                <View style={stylesProfileScreen.photoContainer}>
-                    <Ionicons name="person-circle" size={120} color="#666" />
-                </View>
-
-                <View style={stylesProfileScreen.infoContainer}>
-                    <View style={stylesProfileScreen.infoRow}>
-                        <Ionicons name="person-outline" size={24} color="#666" />
-                        <View style={stylesProfileScreen.infoTextContainer}>
-                            <Text style={stylesProfileScreen.infoLabel}>Name</Text>
-                            <Text style={stylesProfileScreen.infoValue}>{userData.name || 'Not set'}</Text>
-                        </View>
-                    </View>
-
-                    <View style={stylesProfileScreen.infoRow}>
-                        <Ionicons name="at-outline" size={24} color="#666" />
-                        <View style={stylesProfileScreen.infoTextContainer}>
-                            <Text style={stylesProfileScreen.infoLabel}>Username</Text>
-                            <Text style={stylesProfileScreen.infoValue}>{userData.username || 'Not set'}</Text>
-                        </View>
-                    </View>
-
-                    <View style={stylesProfileScreen.infoRow}>
-                        <Ionicons name="shield-outline" size={24} color="#666" />
-                        <View style={stylesProfileScreen.infoTextContainer}>
-                            <Text style={stylesProfileScreen.infoLabel}>Role</Text>
-                            <Text style={stylesProfileScreen.infoValue}>{userData.role || 'user'}</Text>
-                        </View>
-                    </View>
-
-                    <View style={stylesProfileScreen.infoRow}>
-                        <Ionicons name="mail-outline" size={24} color="#666" />
-                        <View style={stylesProfileScreen.infoTextContainer}>
-                            <Text style={stylesProfileScreen.infoLabel}>Email</Text>
-                            <Text style={stylesProfileScreen.infoValue}>{userData.email || 'Not set'}</Text>
-                        </View>
-                    </View>
-
-                    <View style={stylesProfileScreen.infoRow}>
-                        <Ionicons name="calendar-outline" size={24} color="#666" />
-                        <View style={stylesProfileScreen.infoTextContainer}>
-                            <Text style={stylesProfileScreen.infoLabel}>Account Created</Text>
-                            <Text style={stylesProfileScreen.infoValue}>
-                                {formatDate(userData.createdAt)}
-                            </Text>
-                        </View>
-                    </View>
-                </View>
-
-                <View style={stylesProfileScreen.buttonContainer}>
-                    <TouchableOpacity
-                        style={[stylesProfileScreen.button, stylesProfileScreen.logoutButton]}
-                        onPress={handleLogout}
-                    >
-                        <Ionicons name="log-out-outline" size={24} color="#fff" />
-                        <Text style={stylesProfileScreen.buttonText}>Logout</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={[stylesProfileScreen.button, stylesProfileScreen.deleteButton]}
-                        onPress={handleDeleteAccount}
-                    >
-                        <Ionicons name="trash-outline" size={24} color="#ff4d4d" />
-                        <Text style={stylesProfileScreen.deleteButtonText}>Delete Account</Text>
-                    </TouchableOpacity>
+        <View style={stylesProfileScreen.mainContainer}>
+            <View style={stylesProfileScreen.headerContainer}>
+                <View style={stylesProfileScreen.headerContent}>
+                    <Image 
+                        source={require('../assets/looke_logo.png')}
+                        style={stylesProfileScreen.headerLogo}
+                        resizeMode="contain"
+                    />
                 </View>
             </View>
+
+            <ScrollView style={stylesProfileScreen.scrollView}>
+                <View style={stylesProfileScreen.profileSection}>
+                    <View style={stylesProfileScreen.photoContainer}>
+                        <Ionicons name="person-circle" size={120} color="#666" />
+                    </View>
+
+                    <View style={stylesProfileScreen.infoContainer}>
+                        <View style={stylesProfileScreen.infoRow}>
+                            <Ionicons name="person-outline" size={24} color="#666" />
+                            <View style={stylesProfileScreen.infoTextContainer}>
+                                <Text style={stylesProfileScreen.infoLabel}>Name</Text>
+                                <Text style={stylesProfileScreen.infoValue}>{user.name || 'Not set'}</Text>
+                            </View>
+                        </View>
+
+                        <View style={stylesProfileScreen.infoRow}>
+                            <Ionicons name="at-outline" size={24} color="#666" />
+                            <View style={stylesProfileScreen.infoTextContainer}>
+                                <Text style={stylesProfileScreen.infoLabel}>Username</Text>
+                                <Text style={stylesProfileScreen.infoValue}>{user.username || 'Not set'}</Text>
+                            </View>
+                        </View>
+
+                        <View style={stylesProfileScreen.infoRow}>
+                            <Ionicons name="shield-outline" size={24} color="#666" />
+                            <View style={stylesProfileScreen.infoTextContainer}>
+                                <Text style={stylesProfileScreen.infoLabel}>Role</Text>
+                                <Text style={stylesProfileScreen.infoValue}>{user.role || 'user'}</Text>
+                            </View>
+                        </View>
+
+                        <View style={stylesProfileScreen.infoRow}>
+                            <Ionicons name="mail-outline" size={24} color="#666" />
+                            <View style={stylesProfileScreen.infoTextContainer}>
+                                <Text style={stylesProfileScreen.infoLabel}>Email</Text>
+                                <Text style={stylesProfileScreen.infoValue}>{user.email || 'Not set'}</Text>
+                            </View>
+                        </View>
+
+                        <View style={stylesProfileScreen.infoRow}>
+                            <Ionicons name="calendar-outline" size={24} color="#666" />
+                            <View style={stylesProfileScreen.infoTextContainer}>
+                                <Text style={stylesProfileScreen.infoLabel}>Account Created</Text>
+                                <Text style={stylesProfileScreen.infoValue}>
+                                    {formatDate(user.createdAt)}
+                                </Text>
+                            </View>
+                        </View>
+                    </View>
+
+                    <View style={stylesProfileScreen.buttonContainer}>
+                        <TouchableOpacity
+                            style={[stylesProfileScreen.button, stylesProfileScreen.logoutButton]}
+                            onPress={handleLogout}
+                        >
+                            <Ionicons name="log-out-outline" size={24} color="#fff" />
+                            <Text style={stylesProfileScreen.buttonText}>Logout</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={[stylesProfileScreen.button, stylesProfileScreen.deleteButton]}
+                            onPress={handleDeleteAccount}
+                        >
+                            <Ionicons name="trash-outline" size={24} color="#ff4d4d" />
+                            <Text style={stylesProfileScreen.buttonText}>Delete Account</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </ScrollView>
         </View>
     );
 };

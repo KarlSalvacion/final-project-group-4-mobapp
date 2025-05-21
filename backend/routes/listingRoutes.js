@@ -7,7 +7,8 @@ const { validateOwnership, validateRequiredFields } = require('../middleware/val
 // Get all listings
 router.get('/', async (req, res) => {
   try {
-    const listings = await Listing.find();
+    const listings = await Listing.find()
+      .sort({ createdAt: -1 }); // Sort by creation date, newest first
     res.json(listings);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching listings', error: error.message });
@@ -17,6 +18,9 @@ router.get('/', async (req, res) => {
 // Create a new listing with image upload
 router.post('/', upload.array('images', 5), async (req, res) => {
   try {
+    console.log('Received request body:', req.body);
+    console.log('Received files:', req.files);
+
     // Validate required fields
     const requiredFields = ['title', 'description', 'type', 'category', 'location', 'date', 'time'];
     const validationError = validateRequiredFields(requiredFields, req.body);
@@ -36,18 +40,41 @@ router.post('/', upload.array('images', 5), async (req, res) => {
       return res.status(400).json({ message: 'Invalid category' });
     }
 
-    // Upload images
-    const imageUrls = await uploadToCloudinary(req.files);
+    // Check if files were uploaded
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ message: 'At least one image is required' });
+    }
 
+    // Upload images
+    let imageUrls;
+    try {
+      imageUrls = await uploadToCloudinary(req.files);
+    } catch (error) {
+      console.error('Error uploading images:', error);
+      return res.status(500).json({ message: 'Error uploading images', error: error.message });
+    }
+
+    // Create new listing
     const listing = new Listing({
       ...req.body,
       userId: req.user.userId,
-      images: imageUrls
+      images: imageUrls,
+      status: 'active'
     });
 
-    await listing.save();
-    res.status(201).json(listing);
+    // Save listing
+    try {
+      const savedListing = await listing.save();
+      console.log('Saved listing:', savedListing);
+      res.status(201).json(savedListing);
+    } catch (error) {
+      console.error('Error saving listing:', error);
+      // If saving fails, delete uploaded images
+      await deleteFromCloudinary(imageUrls);
+      res.status(500).json({ message: 'Error saving listing', error: error.message });
+    }
   } catch (error) {
+    console.error('Error in create listing route:', error);
     res.status(500).json({ message: 'Error creating listing', error: error.message });
   }
 });

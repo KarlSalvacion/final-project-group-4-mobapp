@@ -1,41 +1,30 @@
-import { StyleSheet, Platform } from "react-native";
+import { StyleSheet } from 'react-native';
 
 const stylesProfileScreen = StyleSheet.create({
-    container: {
+    mainContainer: {
         flex: 1,
         backgroundColor: '#fff',
     },
-    errorContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#fff',
-    },
-    errorHeader: {
-        backgroundColor: '#f8f8f8',
-        padding: 20,
-    },
-    errorText: {
-        color: '#666',
-        fontSize: 16,
-    },
-    header: {
+    headerContainer: {
         flexDirection: 'row',
+        justifyContent: 'flex-start',
         alignItems: 'center',
-        padding: 16,
-        paddingTop: Platform.OS === 'ios' ? 16 : 48,
-        borderBottomWidth: 1,
-        borderBottomColor: '#eee',
-        backgroundColor: 'fff',
+        height: 120,
+        width: '100%',
+        backgroundColor: 'rgb(25, 153, 100)',
+        paddingHorizontal: 20,
     },
-    backButton: {
-        padding: 8,
+    headerContent: {
+        flexDirection: 'row',
+        justifyContent: 'flex-start',
+        alignItems: 'center',
     },
-    headerTitle: {
-        fontSize: 20,
-        fontWeight: '600',
-        marginLeft: 16,
-        color: '#333',
+    headerLogo: {
+        width: 180,
+        height: 100,
+    },
+    scrollView: {
+        flex: 1,
     },
     profileSection: {
         padding: 20,
@@ -45,19 +34,17 @@ const stylesProfileScreen = StyleSheet.create({
         marginBottom: 20,
     },
     infoContainer: {
-        backgroundColor: '#f8f8f8',
-        borderRadius: 12,
-        padding: 16,
+        backgroundColor: '#f5f5f5',
+        borderRadius: 15,
+        padding: 20,
+        gap: 15,
     },
     infoRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 12,
-        borderBottomWidth: 1,
-        borderBottomColor: '#eee',
+        gap: 15,
     },
     infoTextContainer: {
-        marginLeft: 16,
         flex: 1,
     },
     infoLabel: {
@@ -70,44 +57,39 @@ const stylesProfileScreen = StyleSheet.create({
         color: '#333',
         fontWeight: '500',
     },
-
     buttonContainer: {
-        marginTop: 30,
-        paddingBottom: 16,
-        gap: 16,
-        width: '100%',
+        marginTop: 20,
+        gap: 15,
     },
-
     button: {
-        gap: 10,    
-        paddingVertical: 12,
-        borderRadius: 8,
-        alignItems: 'center',
         flexDirection: 'row',
+        alignItems: 'center',
         justifyContent: 'center',
-        borderWidth: 2,
+        padding: 15,
+        borderRadius: 10,
+        gap: 10,
     },
-
     logoutButton: {
         backgroundColor: 'rgb(25, 153, 100)',
-        borderColor: 'rgb(25, 153, 100)',
     },
-
     deleteButton: {
-        backgroundColor: '#fff',
-        borderColor: '#ff4d4d',
+        backgroundColor: '#ff4d4d',
     },
-
     buttonText: {
         color: '#fff',
         fontSize: 16,
-        fontWeight: '600',
+        fontWeight: '500',
     },
-
-    deleteButtonText: { 
-        color: '#ff4d4d',
+    errorContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#fff',
+    },
+    errorText: {
+        color: '#f00',
         fontSize: 16,
-        fontWeight: '600',
+        marginTop: 10,
     },
 });
 
