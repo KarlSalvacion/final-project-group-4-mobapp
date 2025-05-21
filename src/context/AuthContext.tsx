@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { BACKEND_BASE_URL } from '../config/apiConfig';
 
 interface UserData {
     name: string;
@@ -26,6 +27,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [userType, setUserType] = useState<'admin' | 'user' | null>(null);
     const [userData, setUserData] = useState<UserData | null>(null);
     const [token, setToken] = useState<string | null>(null);
+
+    const checkToken = async () => {
+        try {
+            const storedToken = await AsyncStorage.getItem('jwtToken');
+            if (storedToken) {
+                // Verify token with backend
+                const response = await fetch(`${BACKEND_BASE_URL}/api/users/check-token`, {
+                    headers: {
+                        'Authorization': `Bearer ${storedToken}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    setIsAuthenticated(true);
+                    setUserType(data.userData.role === 'admin' ? 'admin' : 'user');
+                    setUserData(data.userData);
+                    setToken(storedToken);
+                } else {
+                    // If token is invalid, clear storage
+                    await AsyncStorage.removeItem('jwtToken');
+                }
+            }
+        } catch (error) {
+            console.error('Error checking token:', error);
+            await AsyncStorage.removeItem('jwtToken');
+        }
+    };
+
+    useEffect(() => {
+        checkToken();
+    }, []);
 
     const login = async (email: string, userType: 'admin' | 'user', userData: UserData, token: string) => {
         setIsAuthenticated(true);

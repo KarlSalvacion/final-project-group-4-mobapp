@@ -93,7 +93,7 @@ export const stylesAddListingScreen = StyleSheet.create({
     },
 
     requiredInput: {
-        borderColor: 'red',
+        borderColor: 'gray',
     },
 
     inputText: {
