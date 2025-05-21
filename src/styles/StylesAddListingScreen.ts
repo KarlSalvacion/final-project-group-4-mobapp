@@ -1,3 +1,4 @@
+import { Picker } from "@react-native-picker/picker";
 import { StyleSheet } from "react-native";
 
 export const stylesAddListingScreen = StyleSheet.create({
@@ -99,7 +100,33 @@ export const stylesAddListingScreen = StyleSheet.create({
         fontSize: 14,
         color: '#333',
     },
+    pickerContainer: {  
+        width: '100%',
+        height: 40,
+        borderWidth: 1,
+        borderColor: 'gray',
+        borderRadius: 5,
+        justifyContent: 'center',
+    },
 
+    pickerHeader: { 
+        backgroundColor: 'red',
+    },
+
+    pickerButton: {
+        width: '100%',
+        height: 40,
+        borderWidth: 1,
+        borderColor: 'gray',
+        borderRadius: 5,
+        justifyContent: 'center',
+    },
+
+    pickerButtonText: { 
+        fontSize: 14,
+        color: '#333',
+    },
+    
     imageInput: {
         width: '100%',
         height: 40,
