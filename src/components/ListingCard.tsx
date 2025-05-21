@@ -9,8 +9,6 @@ interface ListingCardProps {
     onPress?: () => void;
 }
 
-
-
 const ListingCard = ({ listing, onPress }: ListingCardProps) => {
     return (
         <TouchableOpacity 
@@ -19,20 +17,26 @@ const ListingCard = ({ listing, onPress }: ListingCardProps) => {
             activeOpacity={0.7}
         >
             <View style={stylesListingCard.imageContainer}>
-                <Image 
-                    source={{ uri: listing.images[0] }} 
-                    style={stylesListingCard.listingImage} 
-                />
+                {listing.images && listing.images.length > 0 ? (
+                    <Image 
+                        source={{ uri: listing.images[0] }} 
+                        style={stylesListingCard.listingImage} 
+                    />
+                ) : (
+                    <View style={[stylesListingCard.listingImage, stylesListingCard.placeholderImage]}>
+                        <Ionicons name="image-outline" size={40} color="#ccc" />
+                    </View>
+                )}
             </View>
             <View style={stylesListingCard.contentContainer}>
                 <Text style={stylesListingCard.title} numberOfLines={1}>
-                    {listing.name}
+                    {listing.title}
                 </Text>
                 <Text style={stylesListingCard.description} numberOfLines={2}>
                     {listing.description}
                 </Text>
                 <Text style={stylesListingCard.typeText}>
-                    {listing.listingType}
+                    {listing.type}
                 </Text>
                 <View style={stylesListingCard.detailsContainer}>
                     <Ionicons name="location" style={stylesListingCard.icon} />
@@ -43,7 +47,7 @@ const ListingCard = ({ listing, onPress }: ListingCardProps) => {
                 <View style={stylesListingCard.detailsContainer}>
                     <Ionicons name="calendar" style={stylesListingCard.icon} />
                     <Text style={stylesListingCard.dateTimeText}>
-                        {listing.date} at {listing.time}
+                        {new Date(listing.date).toLocaleDateString()} at {listing.time}
                     </Text>
                 </View>
             </View>

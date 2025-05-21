@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, FlatList } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
 import { stylesHomeScreen } from '../styles/StylesHomeScreen';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -18,7 +18,7 @@ type NavigationProp = StackNavigationProp<RootStackParamList>;
 
 const HomeScreen = () => {
     const navigation = useNavigation<NavigationProp>();
-    const { listings } = useListings();
+    const { listings, isLoading, error, fetchListings } = useListings();
 
     const handleListingPress = (listingId: string) => {
         navigation.navigate('DetailedItemListing', { listingId });
@@ -39,29 +39,45 @@ const HomeScreen = () => {
                 </TouchableOpacity>
             </View>
             <View style={stylesHomeScreen.contentContainer}>
-                <FlatList
-                    data={listings}
-                    keyExtractor={(item) => item.id}
-                    renderItem={({ item }) => (
-                        <ListingCard 
-                            listing={item} 
-                            onPress={() => handleListingPress(item.id)}
-                        />
-                    )}
-                    showsVerticalScrollIndicator={false}
-                    contentContainerStyle={stylesHomeScreen.listContainer}
-                    ListEmptyComponent={
-                        <View style={stylesHomeScreen.emptyContainer}>
-                            <Text style={stylesHomeScreen.emptyText}>No listings yet</Text>
-                        </View>
-                    }
-                />
+                {isLoading ? (
+                    <View style={stylesHomeScreen.loadingContainer}>
+                        <ActivityIndicator size="large" color="#0000ff" />
+                    </View>
+                ) : error ? (
+                    <View style={stylesHomeScreen.errorContainer}>
+                        <Text style={stylesHomeScreen.errorText}>{error}</Text>
+                        <TouchableOpacity 
+                            style={stylesHomeScreen.retryButton}
+                            onPress={fetchListings}
+                        >
+                            <Text style={stylesHomeScreen.retryButtonText}>Retry</Text>
+                        </TouchableOpacity>
+                    </View>
+                ) : (
+                    <FlatList
+                        data={listings}
+                        keyExtractor={(item) => item._id}
+                        renderItem={({ item }) => (
+                            <ListingCard 
+                                listing={item} 
+                                onPress={() => handleListingPress(item._id)}
+                            />
+                        )}
+                        showsVerticalScrollIndicator={false}
+                        contentContainerStyle={stylesHomeScreen.listContainer}
+                        ListEmptyComponent={
+                            <View style={stylesHomeScreen.emptyContainer}>
+                                <Text style={stylesHomeScreen.emptyText}>No listings yet</Text>
+                            </View>
+                        }
+                    />
+                )}
 
                 <TouchableOpacity 
                     style={stylesHomeScreen.addListingButton} 
                     onPress={() => navigation.navigate('AddListing')}
                 >
-                    <Text style={stylesHomeScreen.addListingText}>Add a Listing</Text>  
+                    <Ionicons name="add" size={30} color="#fff" />
                 </TouchableOpacity>
             </View>
         </View>

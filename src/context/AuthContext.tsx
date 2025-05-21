@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { BACKEND_BASE_URL } from '../config/apiConfig';
 
 interface UserData {
     name: string;
@@ -17,6 +18,7 @@ interface AuthContextType {
     token: string | null;
     login: (email: string, userType: 'admin' | 'user', userData: UserData, token: string) => Promise<void>;
     logout: () => void;
+    isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -26,25 +28,89 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [userType, setUserType] = useState<'admin' | 'user' | null>(null);
     const [userData, setUserData] = useState<UserData | null>(null);
     const [token, setToken] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+
+    // Check for existing auth data on app start
+    useEffect(() => {
+        const loadStoredAuth = async () => {
+            try {
+                const storedToken = await AsyncStorage.getItem('jwtToken');
+                const storedUserData = await AsyncStorage.getItem('userData');
+                const storedUserType = await AsyncStorage.getItem('userType');
+
+                if (storedToken && storedUserData && storedUserType) {
+                    // Validate token with backend
+                    const response = await fetch(`${BACKEND_BASE_URL}/api/users/check-token`, {
+                        headers: {
+                            'Authorization': `Bearer ${storedToken}`,
+                        },
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        setToken(storedToken);
+                        setUserData(JSON.parse(storedUserData));
+                        setUserType(storedUserType as 'admin' | 'user');
+                        setIsAuthenticated(true);
+                    } else {
+                        // Token is invalid, clear stored data
+                        await AsyncStorage.multiRemove(['jwtToken', 'userData', 'userType']);
+                        setToken(null);
+                        setUserData(null);
+                        setUserType(null);
+                        setIsAuthenticated(false);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading stored auth data:', error);
+                // Clear stored data on error
+                await AsyncStorage.multiRemove(['jwtToken', 'userData', 'userType']);
+                setToken(null);
+                setUserData(null);
+                setUserType(null);
+                setIsAuthenticated(false);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        loadStoredAuth();
+    }, []);
 
     const login = async (email: string, userType: 'admin' | 'user', userData: UserData, token: string) => {
-        setIsAuthenticated(true);
-        setUserType(userType);
-        setUserData(userData);
-        setToken(token);
-        await AsyncStorage.setItem('jwtToken', token);
+        try {
+            setIsAuthenticated(true);
+            setUserType(userType);
+            setUserData(userData);
+            setToken(token);
+            
+            // Store auth data
+            await AsyncStorage.setItem('jwtToken', token);
+            await AsyncStorage.setItem('userData', JSON.stringify(userData));
+            await AsyncStorage.setItem('userType', userType);
+        } catch (error) {
+            console.error('Error storing auth data:', error);
+            throw error;
+        }
     };
 
     const logout = async () => {
-        setIsAuthenticated(false);
-        setUserType(null);
-        setUserData(null);
-        setToken(null);
-        await AsyncStorage.removeItem('jwtToken');
+        try {
+            setIsAuthenticated(false);
+            setUserType(null);
+            setUserData(null);
+            setToken(null);
+            
+            // Clear stored auth data
+            await AsyncStorage.multiRemove(['jwtToken', 'userData', 'userType']);
+        } catch (error) {
+            console.error('Error clearing auth data:', error);
+            throw error;
+        }
     };
 
     return (
-        <AuthContext.Provider value={{ isAuthenticated, userType, userData, token, login, logout }}>
+        <AuthContext.Provider value={{ isAuthenticated, userType, userData, token, login, logout, isLoading }}>
             {children}
         </AuthContext.Provider>
     );

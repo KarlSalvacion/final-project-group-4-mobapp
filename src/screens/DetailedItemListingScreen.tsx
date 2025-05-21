@@ -12,8 +12,6 @@ type RootStackParamList = {
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
 
-
-
 const DetailedItemListingScreen = () => {
     const navigation = useNavigation<NavigationProp>();
     const route = useRoute();
@@ -21,7 +19,7 @@ const DetailedItemListingScreen = () => {
     
     // @ts-ignore - We know listingId exists in params
     const listingId = route.params?.listingId;
-    const listing = listings.find(l => l.id === listingId);
+    const listing = listings.find(l => l._id === listingId);
 
     if (!listing) {
         return (
@@ -54,7 +52,7 @@ const DetailedItemListingScreen = () => {
                 )}
                 
                 <View style={stylesDetailedItemListing.contentContainer}>
-                    <Text style={stylesDetailedItemListing.title}>{listing.name}</Text>
+                    <Text style={stylesDetailedItemListing.title}>{listing.title}</Text>
                     <Text style={stylesDetailedItemListing.description}>{listing.description}</Text>
                     
                     <View style={stylesDetailedItemListing.detailsContainer}>
@@ -65,7 +63,7 @@ const DetailedItemListingScreen = () => {
                     <View style={stylesDetailedItemListing.detailsContainer}>
                         <Ionicons name="calendar" style={stylesDetailedItemListing.icon} />
                         <Text style={stylesDetailedItemListing.detailText}>
-                            {listing.date} at around {listing.time}
+                            {new Date(listing.date).toLocaleDateString()} at around {listing.time}
                         </Text>
                     </View>
                 </View>

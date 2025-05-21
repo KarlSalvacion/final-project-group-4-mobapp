@@ -26,6 +26,11 @@ export const stylesListingCard = StyleSheet.create({
         height: '100%',
         resizeMode: 'cover',
     },
+    placeholderImage: {
+        backgroundColor: '#f5f5f5',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
     contentContainer: {
         padding: 16,
         gap: 8,
