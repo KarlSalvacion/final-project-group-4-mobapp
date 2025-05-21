@@ -70,6 +70,40 @@ const stylesProfileScreen = StyleSheet.create({
         color: '#333',
         fontWeight: '500',
     },
+
+    buttonContainer: {
+        marginTop: 20,
+        alignItems: 'center',
+    },
+
+    button: {
+        backgroundColor: 'rgb(25, 153, 100)',
+        paddingVertical: 12,
+        paddingHorizontal: 32,
+        borderRadius: 8,
+        marginTop: 10,
+    },
+
+    logoutButton: {
+        backgroundColor: '#f44336',
+    },  
+
+    buttonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+
+    deleteButton: {
+        backgroundColor: '#f44336',
+    },
+
+    deleteButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+
 });
 
 export default stylesProfileScreen;
