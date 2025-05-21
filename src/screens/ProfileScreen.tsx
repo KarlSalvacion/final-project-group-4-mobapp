@@ -181,16 +181,6 @@ const ProfileScreen = () => {
                             <Text style={stylesProfileScreen.infoValue}>{userData.email || 'Not set'}</Text>
                         </View>
                     </View>
-
-                    <View style={stylesProfileScreen.infoRow}>
-                        <Ionicons name="calendar-outline" size={24} color="#666" />
-                        <View style={stylesProfileScreen.infoTextContainer}>
-                            <Text style={stylesProfileScreen.infoLabel}>Account Created</Text>
-                            <Text style={stylesProfileScreen.infoValue}>
-                                {formatDate(userData.createdAt)}
-                            </Text>
-                        </View>
-                    </View>
                 </View>
 
                 <View style={stylesProfileScreen.buttonContainer}>
