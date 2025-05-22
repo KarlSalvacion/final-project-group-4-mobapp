@@ -62,7 +62,148 @@ export const stylesDetailedItemListing = StyleSheet.create({
     detailText: {
         fontSize: 16,
         color: '#333',
-    }
+    },
+    claimButton: {
+        backgroundColor: 'rgb(25, 153, 100)',
+        padding: 15,
+        borderRadius: 10,
+        alignItems: 'center',
+        marginTop: 20,
+    },
+    claimButtonDisabled: {
+        backgroundColor: '#ccc',
+        opacity: 0.7,
+    },
+    claimButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    modalContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContent: {
+        backgroundColor: '#fff',
+        borderRadius: 15,
+        padding: 20,
+        width: '90%',
+        maxWidth: 400,
+        maxHeight: 600,
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 10,
+        color: '#333',
+    },
+    modalSubtitle: {
+        fontSize: 14,
+        color: '#666',
+        marginBottom: 20,
+    },
+    claimInput: {
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderRadius: 8,
+        padding: 12,
+        fontSize: 16,
+        minHeight: 120,
+        textAlignVertical: 'top',
+        marginBottom: 20,
+    },
+    modalButtons: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        gap: 10,
+        marginBottom: 20,
+    },
+    modalButton: {
+        flex: 1,
+        padding: 15,
+        borderRadius: 8,
+        alignItems: 'center',
+    },
+    cancelButton: {
+        backgroundColor: '#ccc',
+    },
+    submitButton: {
+        backgroundColor: 'rgb(25, 153, 100)',
+    },
+    modalButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '500',
+    },
+    imageUploadContainer: {
+        marginBottom: 20,
+    },
+    imageUploadTitle: {
+        fontSize: 16,
+        fontWeight: '500',
+        color: '#333',
+        marginBottom: 10,
+    },
+    imageUploadButton: {
+        backgroundColor: 'rgb(25, 153, 100)',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 12,
+        borderRadius: 8,
+        marginBottom: 10,
+    },
+    imageUploadButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        marginLeft: 8,
+    },
+    imagePreviewContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 10,
+    },
+    imagePreviewWrapper: {
+        width: 100,
+        height: 100,
+        position: 'relative',
+    },
+    imagePreview: {
+        width: '100%',
+        height: '100%',
+        borderRadius: 8,
+    },
+    removeImageButton: {
+        position: 'absolute',
+        top: -10,
+        right: -10,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        borderRadius: 12,
+    },
+    titleContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    typeText: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 6,
+        overflow: 'hidden',
+    },
+    typeFound: {
+        backgroundColor: 'rgba(25, 153, 100, 0.1)',
+        color: 'rgb(25, 153, 100)',
+    },
+    typeLost: {
+        backgroundColor: 'rgba(255, 59, 48, 0.1)',
+        color: 'rgb(255, 59, 48)',
+    },
 });
 
 

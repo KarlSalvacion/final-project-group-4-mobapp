@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import HomeScreen from '../screens/HomeScreen';
 import AddListingScreen from '../screens/AddListingScreen';
+import MyListingsScreen from '../screens/MyListingsScreen';
 import { stylesNavigationBar } from '../styles/navigation/StylesNavigationBar';
 
 const Tab = createBottomTabNavigator();
@@ -19,8 +20,10 @@ const NavigationBar = () => {
 
                     if (route.name === 'Home') {
                         iconName = focused ? 'home' : 'home-outline';
-                    } else {
+                    } else if (route.name === 'AddListing') {
                         iconName = focused ? 'add-circle' : 'add-circle-outline';
+                    } else {
+                        iconName = focused ? 'list' : 'list-outline';
                     }
 
                     return <Ionicons name={iconName} size={size} color={color} />;
@@ -33,6 +36,7 @@ const NavigationBar = () => {
         >
             <Tab.Screen name="Home" component={HomeScreen} />
             <Tab.Screen name="AddListing" component={AddListingScreen} />
+            <Tab.Screen name="MyListings" component={MyListingsScreen} />
         </Tab.Navigator>
     );  
 }

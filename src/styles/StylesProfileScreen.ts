@@ -18,6 +18,10 @@ const stylesProfileScreen = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'flex-start',
         alignItems: 'center',
+        gap: 15,
+    },
+    backButton: {
+        padding: 8,
     },
     headerLogo: {
         width: 180,

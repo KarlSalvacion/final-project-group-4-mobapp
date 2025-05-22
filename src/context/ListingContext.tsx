@@ -2,7 +2,25 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { BACKEND_BASE_URL } from '../config/apiConfig';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from './AuthContext';
-import { Listing } from '../types';
+
+export interface Listing {
+    _id: string;
+    title: string;
+    description: string;
+    category: string;
+    type: 'lost' | 'found';
+    date: string;
+    time: string;
+    location: string;
+    images: string[];
+    createdAt: string;
+    userId: {
+        _id: string;
+        name: string;
+        username: string;
+    };
+    status: string;
+}
 
 interface ListingContextType {
     listings: Listing[];

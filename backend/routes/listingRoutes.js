@@ -1,14 +1,28 @@
 const express = require('express');
 const router = express.Router();
 const Listing = require('../models/Listing');
+const User = require('../models/User');
 const { upload, uploadToCloudinary, deleteFromCloudinary } = require('../utils/uploadUtils');
 const { validateOwnership, validateRequiredFields } = require('../middleware/validators');
+
+// Get user's listings
+router.get('/my-listings', async (req, res) => {
+  try {
+    const listings = await Listing.find({ userId: req.user.userId })
+      .populate('userId', 'name username')
+      .sort({ createdAt: -1 });
+    res.json(listings);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching user listings', error: error.message });
+  }
+});
 
 // Get all listings
 router.get('/', async (req, res) => {
   try {
     const listings = await Listing.find()
-      .sort({ createdAt: -1 }); // Sort by creation date, newest first
+      .populate('userId', 'name username')
+      .sort({ createdAt: -1 });
     res.json(listings);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching listings', error: error.message });

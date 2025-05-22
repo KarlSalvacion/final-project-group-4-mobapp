@@ -136,6 +136,12 @@ const ProfileScreen = () => {
         <View style={stylesProfileScreen.mainContainer}>
             <View style={stylesProfileScreen.headerContainer}>
                 <View style={stylesProfileScreen.headerContent}>
+                    <TouchableOpacity 
+                        style={stylesProfileScreen.backButton}
+                        onPress={() => navigation.goBack()}
+                    >
+                        <Ionicons name="arrow-back" size={24} color="#fff" />
+                    </TouchableOpacity>
                     <Image 
                         source={require('../assets/looke_logo.png')}
                         style={stylesProfileScreen.headerLogo}

@@ -10,6 +10,8 @@ interface ListingCardProps {
 }
 
 const ListingCard = ({ listing, onPress }: ListingCardProps) => {
+    if (!listing) return null;
+
     return (
         <TouchableOpacity 
             style={stylesListingCard.listingCardContainer}
@@ -29,15 +31,28 @@ const ListingCard = ({ listing, onPress }: ListingCardProps) => {
                 )}
             </View>
             <View style={stylesListingCard.contentContainer}>
-                <Text style={stylesListingCard.title} numberOfLines={1}>
-                    {listing.title}
-                </Text>
+                <View style={stylesListingCard.titleContainer}>
+                    <Text style={stylesListingCard.title} numberOfLines={1}>
+                        {listing.title}
+                    </Text>
+                    {listing.type && (
+                        <Text style={[
+                            stylesListingCard.typeText,
+                            listing.type === 'found' ? stylesListingCard.typeFound : stylesListingCard.typeLost
+                        ]}>
+                            {listing.type.toUpperCase()}
+                        </Text>
+                    )}
+                </View>
                 <Text style={stylesListingCard.description} numberOfLines={2}>
                     {listing.description}
                 </Text>
-                <Text style={stylesListingCard.typeText}>
-                    {listing.type}
-                </Text>
+                <View style={stylesListingCard.detailsContainer}>
+                    <Ionicons name="person-outline" style={stylesListingCard.icon} />
+                    <Text style={stylesListingCard.userText}>
+                        {listing.userId?.name || 'Anonymous'}
+                    </Text>
+                </View>
                 <View style={stylesListingCard.detailsContainer}>
                     <Ionicons name="location" style={stylesListingCard.icon} />
                     <Text style={stylesListingCard.locationText} numberOfLines={1}>
