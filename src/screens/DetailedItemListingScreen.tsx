@@ -498,7 +498,7 @@ const DetailedItemListingScreen = () => {
                         <View style={stylesDetailedItemListing.detailsContainer}>
                             <Ionicons name="person-outline" style={stylesDetailedItemListing.icon} />
                             <Text style={stylesDetailedItemListing.detailText}>
-                                Posted by {listing.userId?.name || 'Anonymous'}
+                                Posted by {listing.userId?.name || listing.userId?.username || 'Anonymous'}
                             </Text>
                         </View>
 

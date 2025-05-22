@@ -272,14 +272,14 @@ export const stylesDetailedItemListing = StyleSheet.create({
         width: 8,
         height: 8,
         borderRadius: 4,
-        backgroundColor: 'rgba(255, 255, 255, 0.5)',
+        backgroundColor: 'rgba(0, 0, 0, 0.4)',
         marginHorizontal: 4,
     },
     paginationDotActive: {
-        backgroundColor: '#fff',
         width: 10,
         height: 10,
         borderRadius: 5,
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
     },
 });
 

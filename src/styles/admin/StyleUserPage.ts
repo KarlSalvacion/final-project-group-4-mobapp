@@ -100,6 +100,41 @@ const stylesAdminUserPage = StyleSheet.create({
         fontSize: 16,
         fontWeight: '500',
     },
+    actionButtons: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 10,
+        gap: 10,
+    },
+    roleButton: {
+        flex: 1,
+        padding: 8,
+        borderRadius: 5,
+        alignItems: 'center',
+    },
+    promoteButton: {
+        backgroundColor: 'rgb(25, 153, 100)',
+    },
+    demoteButton: {
+        backgroundColor: '#666',
+    },
+    roleButtonText: {
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: '600',
+    },
+    deleteButton: {
+        flex: 1,
+        padding: 8,
+        borderRadius: 5,
+        backgroundColor: '#ff4444',
+        alignItems: 'center',
+    },
+    deleteButtonText: {
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: '600',
+    },
 });
 
 export default stylesAdminUserPage; 

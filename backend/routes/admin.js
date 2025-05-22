@@ -102,14 +102,108 @@ router.get('/users', adminAuth, async (req, res) => {
 router.put('/users/:id/role', adminAuth, async (req, res) => {
     try {
         const { role } = req.body;
-        const user = await User.findByIdAndUpdate(
-            req.params.id,
-            { role },
-            { new: true }
-        ).select('-password');
-        res.json({ success: true, user });
+        const userId = req.params.id;
+
+        console.log('Role update request:', {
+            userId,
+            requestedRole: role,
+            currentUser: req.user.userId
+        });
+
+        // Prevent self-modification
+        if (userId === req.user.userId) {
+            console.log('Attempted self-modification');
+            return res.status(400).json({ 
+                success: false, 
+                message: 'You cannot modify your own role' 
+            });
+        }
+
+        // Validate role
+        if (!role || !['user', 'admin'].includes(role)) {
+            console.log('Invalid role provided:', role);
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Invalid role. Must be either "user" or "admin"' 
+            });
+        }
+
+        // Check if user exists
+        const user = await User.findById(userId);
+        if (!user) {
+            console.log('User not found:', userId);
+            return res.status(404).json({ 
+                success: false, 
+                message: 'User not found' 
+            });
+        }
+
+        console.log('Found user:', {
+            userId: user._id,
+            currentRole: user.role,
+            requestedRole: role
+        });
+
+        // Update user role
+        user.role = role;
+        try {
+            await user.save();
+            console.log('Successfully updated user role');
+        } catch (saveError) {
+            console.error('Error saving user:', saveError);
+            throw saveError;
+        }
+
+        // Return updated user without password
+        const updatedUser = await User.findById(userId).select('-password');
+        res.json({ success: true, user: updatedUser });
     } catch (error) {
-        res.status(500).json({ success: false, message: 'Error updating user role' });
+        console.error('Error updating user role:', {
+            error: error.message,
+            stack: error.stack,
+            userId: req.params.id,
+            role: req.body.role
+        });
+        res.status(500).json({ 
+            success: false, 
+            message: `Error updating user role: ${error.message}`,
+            error: error.message 
+        });
+    }
+});
+
+// Delete user
+router.delete('/users/:id', adminAuth, async (req, res) => {
+    try {
+        const userId = req.params.id;
+
+        // Prevent self-deletion
+        if (userId === req.user.userId) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'You cannot delete your own account' 
+            });
+        }
+
+        // Check if user exists
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'User not found' 
+            });
+        }
+
+        // Delete user
+        await User.findByIdAndDelete(userId);
+        res.json({ success: true, message: 'User deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error deleting user',
+            error: error.message 
+        });
     }
 });
 

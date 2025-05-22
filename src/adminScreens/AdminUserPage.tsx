@@ -20,6 +20,7 @@ const AdminUserPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [refreshing, setRefreshing] = useState(false);
+    const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
     const fetchUsers = useCallback(async () => {
         try {
@@ -31,6 +32,22 @@ const AdminUserPage = () => {
                 throw new Error('No authentication token found');
             }
 
+            // First get current user info
+            const userResponse = await fetch(`${BACKEND_BASE_URL}/api/users/check-token`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json',
+                },
+            });
+
+            if (!userResponse.ok) {
+                throw new Error('Failed to fetch current user');
+            }
+
+            const { userData } = await userResponse.json();
+            setCurrentUserId(userData._id);
+
+            // Then get all users
             const response = await fetch(`${BACKEND_BASE_URL}/api/admin/users`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -56,6 +73,119 @@ const AdminUserPage = () => {
             setLoading(false);
         }
     }, []);
+
+    const handleRoleChange = async (userId: string, newRole: 'admin' | 'user', username: string) => {
+        Alert.alert(
+            'Change User Role',
+            `Are you sure you want to ${newRole === 'admin' ? 'promote' : 'demote'} ${username} to ${newRole}?`,
+            [
+                {
+                    text: 'Cancel',
+                    style: 'cancel',
+                },
+                {
+                    text: 'Confirm',
+                    style: 'default',
+                    onPress: async () => {
+                        try {
+                            const token = await AsyncStorage.getItem('jwtToken');
+                            if (!token) {
+                                throw new Error('No authentication token found');
+                            }
+
+                            console.log('Updating role for user:', {
+                                userId,
+                                newRole,
+                                username,
+                                token: token.substring(0, 20) + '...'
+                            });
+
+                            const response = await fetch(`${BACKEND_BASE_URL}/api/admin/users/${userId}/role`, {
+                                method: 'PUT',
+                                headers: {
+                                    'Authorization': `Bearer ${token}`,
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({ role: newRole }),
+                            });
+
+                            const data = await response.json();
+                            console.log('Response:', {
+                                status: response.status,
+                                data
+                            });
+
+                            if (!response.ok) {
+                                throw new Error(data.message || 'Failed to update user role');
+                            }
+
+                            // Update the local state
+                            setUsers(prevUsers => 
+                                prevUsers.map(user => 
+                                    user._id === userId ? { ...user, role: newRole } : user
+                                )
+                            );
+
+                            Alert.alert('Success', `User role updated to ${newRole}`);
+                        } catch (err) {
+                            console.error('Error updating role:', {
+                                error: err,
+                                message: err instanceof Error ? err.message : 'Unknown error',
+                                userId,
+                                newRole
+                            });
+                            const errorMessage = err instanceof Error ? err.message : 'Failed to update user role';
+                            Alert.alert('Error', errorMessage);
+                        }
+                    },
+                },
+            ],
+        );
+    };
+
+    const handleDeleteUser = async (userId: string, username: string) => {
+        Alert.alert(
+            'Delete User',
+            `Are you sure you want to delete user ${username}? This action cannot be undone.`,
+            [
+                {
+                    text: 'Cancel',
+                    style: 'cancel',
+                },
+                {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            const token = await AsyncStorage.getItem('jwtToken');
+                            if (!token) {
+                                throw new Error('No authentication token found');
+                            }
+
+                            const response = await fetch(`${BACKEND_BASE_URL}/api/admin/users/${userId}`, {
+                                method: 'DELETE',
+                                headers: {
+                                    'Authorization': `Bearer ${token}`,
+                                    'Accept': 'application/json',
+                                },
+                            });
+
+                            if (!response.ok) {
+                                throw new Error('Failed to delete user');
+                            }
+
+                            // Update the local state
+                            setUsers(prevUsers => prevUsers.filter(user => user._id !== userId));
+                            Alert.alert('Success', 'User deleted successfully');
+                        } catch (err) {
+                            const errorMessage = err instanceof Error ? err.message : 'Failed to delete user';
+                            Alert.alert('Error', errorMessage);
+                        }
+                    },
+                },
+            ],
+        );
+    };
 
     const onRefresh = async () => {
         setRefreshing(true);
@@ -124,6 +254,7 @@ const AdminUserPage = () => {
                 </View>
 
                 <ScrollView
+                    showsVerticalScrollIndicator={false}
                     refreshControl={
                         <RefreshControl
                             refreshing={refreshing}
@@ -147,6 +278,29 @@ const AdminUserPage = () => {
                             <Text style={stylesAdminUserPage.userDate}>
                                 Joined: {new Date(user.createdAt).toLocaleDateString()}
                             </Text>
+                            
+                            {user._id !== currentUserId && (
+                                <View style={stylesAdminUserPage.actionButtons}>
+                                    <TouchableOpacity
+                                        style={[
+                                            stylesAdminUserPage.roleButton,
+                                            user.role === 'admin' ? stylesAdminUserPage.demoteButton : stylesAdminUserPage.promoteButton
+                                        ]}
+                                        onPress={() => handleRoleChange(user._id, user.role === 'admin' ? 'user' : 'admin', user.username)}
+                                    >
+                                        <Text style={stylesAdminUserPage.roleButtonText}>
+                                            {user.role === 'admin' ? 'Demote to User' : 'Promote to Admin'}
+                                        </Text>
+                                    </TouchableOpacity>
+
+                                    <TouchableOpacity
+                                        style={stylesAdminUserPage.deleteButton}
+                                        onPress={() => handleDeleteUser(user._id, user.username)}
+                                    >
+                                        <Text style={stylesAdminUserPage.deleteButtonText}>Delete User</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            )}
                         </View>
                     ))}
                 </ScrollView>
