@@ -11,7 +11,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import ImagePreview from '../components/ImagePreview';
 import { listingValidationSchema } from '../validation/ValidationSchema';
 import { useListings } from '../context/ListingContext';
-import { ListingType } from '../context/ListingContext';
+import { ListingType, Listing } from '../types';
 import { Picker } from '@react-native-picker/picker';
 import * as Location from 'expo-location';
 import { BACKEND_BASE_URL } from '../config/apiConfig';
@@ -53,7 +53,8 @@ const AddListingScreen = () => {
     const [showTimePicker, setShowTimePicker] = useState(false);
     const [showCategoryPicker, setShowCategoryPicker] = useState(false);
     const [locationPermission, setLocationPermission] = useState<boolean | null>(null);
-    
+    const [formRef, setFormRef] = useState<any>(null);
+
     useEffect(() => {
         (async () => {
             const { status } = await Location.requestForegroundPermissionsAsync();
@@ -100,7 +101,7 @@ const AddListingScreen = () => {
         }
     };
 
-    const handleSubmit = async (values: FormValues) => {
+    const handleSubmit = async (values: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
         if (!token) {
             Alert.alert(
                 "Authentication Error",
@@ -140,7 +141,23 @@ const AddListingScreen = () => {
             formData.append('time', values.time);
 
             const newListing = await listingService.createListing(formData);
-            addListing(newListing);
+            
+            // After successful creation, update the listings in context
+            await addListing({
+                title: values.title,
+                description: values.description,
+                type: values.listingType,
+                category: values.category,
+                location: values.location,
+                date: values.date,
+                time: values.time,
+                images: values.images,
+                userId: newListing.userId,
+                status: 'active'
+            });
+
+            // Reset the form
+            resetForm();
 
             Alert.alert(
                 "Success",
@@ -214,31 +231,7 @@ const AddListingScreen = () => {
                                 category: '',
                             }}
                             validationSchema={listingValidationSchema}
-                            onSubmit={(values: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
-                                // Validate all required fields before submission
-                                if (!values.title || !values.description || !values.category || 
-                                    !values.location || !values.date || !values.time || 
-                                    values.images.length === 0) {
-                                    Alert.alert(
-                                        "Validation Error",
-                                        "Please fill in all required fields and add at least one image."
-                                    );
-                                    return;
-                                }
-                                handleSubmit(values);
-                                resetForm({
-                                    values: {
-                                        listingType: 'lost' as ListingType,
-                                        title: '',
-                                        description: '',
-                                        date: '',
-                                        time: '',
-                                        location: '',
-                                        images: [],
-                                        category: '',
-                                    }
-                                });
-                            }}
+                            onSubmit={handleSubmit}
                         >
                             {({ handleChange, handleBlur, handleSubmit, values, errors, setFieldValue, resetForm }) => {
                                 const pickImageAsync = async () => {
@@ -494,16 +487,7 @@ const AddListingScreen = () => {
 
                                         <TouchableOpacity
                                             style={stylesAddListingScreen.submitButton}
-                                            onPress={() => {
-                                                if (Object.keys(errors).length === 0) {
-                                                    handleSubmit();
-                                                } else {
-                                                    Alert.alert(
-                                                        "Validation Error",
-                                                        "Please fill in all required fields correctly."
-                                                    );
-                                                }
-                                            }}
+                                            onPress={() => handleSubmit()}
                                         >
                                             <Text style={stylesAddListingScreen.submitButtonText}>Submit</Text>
                                         </TouchableOpacity>

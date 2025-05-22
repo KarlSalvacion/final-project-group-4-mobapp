@@ -2,32 +2,17 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { BACKEND_BASE_URL } from '../config/apiConfig';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from './AuthContext';
+import { Listing } from '../types';
 
-export type ListingType = 'lost' | 'found';
-
-export type Listing = {
-    _id: string;
-    userId: string;
-    title: string;
-    description: string;
-    type: ListingType;
-    category: string;
-    location: string;
-    date: string;
-    time: string;
-    images: string[];
-    status: 'active' | 'claimed' | 'closed';
-    createdAt: string;
-    updatedAt: string;
-};
-
-type ListingContextType = {
+interface ListingContextType {
     listings: Listing[];
     addListing: (listing: Omit<Listing, '_id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
-    fetchListings: () => Promise<void>;
+    fetchListings: (page?: number, limit?: number) => Promise<void>;
     isLoading: boolean;
     error: string | null;
-};
+    hasMore: boolean;
+    currentPage: number;
+}
 
 const ListingContext = createContext<ListingContextType | undefined>(undefined);
 
@@ -35,9 +20,11 @@ export const ListingProvider = ({ children }: { children: React.ReactNode }) => 
     const [listings, setListings] = useState<Listing[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [hasMore, setHasMore] = useState(true);
+    const [currentPage, setCurrentPage] = useState(1);
     const { isAuthenticated } = useAuth();
 
-    const fetchListings = async () => {
+    const fetchListings = async (page = 1, limit = 10) => {
         try {
             setIsLoading(true);
             setError(null);
@@ -47,19 +34,24 @@ export const ListingProvider = ({ children }: { children: React.ReactNode }) => 
                 throw new Error('No authentication token found');
             }
 
-            const response = await fetch(`${BACKEND_BASE_URL}/api/listings`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Accept': 'application/json',
-                },
-            });
+            const response = await fetch(
+                `${BACKEND_BASE_URL}/api/listings?page=${page}&limit=${limit}`,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json',
+                    },
+                }
+            );
 
             if (!response.ok) {
                 throw new Error('Failed to fetch listings');
             }
 
             const data = await response.json();
-            setListings(data);
+            setHasMore(data.length === limit);
+            setCurrentPage(page);
+            setListings(prev => page === 1 ? data : [...prev, ...data]);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'An error occurred while fetching listings');
             console.error('Error fetching listings:', err);
@@ -70,6 +62,7 @@ export const ListingProvider = ({ children }: { children: React.ReactNode }) => 
 
     const addListing = async (listing: Omit<Listing, '_id' | 'createdAt' | 'updatedAt'>) => {
         try {
+            setError(null); // Clear any existing errors
             const token = await AsyncStorage.getItem('jwtToken');
             if (!token) {
                 throw new Error('No authentication token found');
@@ -105,13 +98,16 @@ export const ListingProvider = ({ children }: { children: React.ReactNode }) => 
             });
 
             if (!response.ok) {
-                throw new Error('Failed to create listing');
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to create listing');
             }
 
             const newListing = await response.json();
-            setListings(prev => [...prev, newListing]);
+            setListings(prev => [newListing, ...prev]);
+            setError(null); // Ensure error is cleared on success
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'An error occurred while creating listing');
+            const errorMessage = err instanceof Error ? err.message : 'An error occurred while creating listing';
+            setError(errorMessage);
             console.error('Error creating listing:', err);
             throw err;
         }
@@ -120,15 +116,27 @@ export const ListingProvider = ({ children }: { children: React.ReactNode }) => 
     // Fetch listings when the app starts and user is authenticated
     useEffect(() => {
         if (isAuthenticated) {
-            fetchListings();
+            fetchListings(1);
         } else {
             setListings([]);
             setError(null);
+            setCurrentPage(1);
+            setHasMore(true);
         }
     }, [isAuthenticated]);
 
     return (
-        <ListingContext.Provider value={{ listings, addListing, fetchListings, isLoading, error }}>
+        <ListingContext.Provider 
+            value={{ 
+                listings, 
+                addListing, 
+                fetchListings, 
+                isLoading, 
+                error,
+                hasMore,
+                currentPage
+            }}
+        >
             {children}
         </ListingContext.Provider>
     );

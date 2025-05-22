@@ -101,15 +101,19 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
+
     // Find user
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).json({ message: 'User not found' });
+      return res.status(400).json({ message: 'Invalid email or password' });
     }
 
     // Check password (Note: In production, use proper password comparison)
     if (user.password !== password) {
-      return res.status(400).json({ message: 'Invalid password' });
+      return res.status(400).json({ message: 'Invalid email or password' });
     }
 
     // Create token with role
@@ -143,7 +147,10 @@ router.post('/login', async (req, res) => {
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ message: 'Error logging in', error: error.message });
+    res.status(500).json({ 
+      message: 'An error occurred during login',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 

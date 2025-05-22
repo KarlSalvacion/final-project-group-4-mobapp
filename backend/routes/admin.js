@@ -50,6 +50,44 @@ router.get('/listings', adminAuth, async (req, res) => {
     }
 });
 
+// Update listing status
+router.put('/listings/:id/status', adminAuth, async (req, res) => {
+    try {
+        const { status } = req.body;
+        
+        // Validate status
+        const validStatuses = ['active', 'claimed', 'closed'];
+        if (!validStatuses.includes(status)) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Invalid status. Must be one of: active, claimed, closed' 
+            });
+        }
+
+        const listing = await Listing.findByIdAndUpdate(
+            req.params.id,
+            { status },
+            { new: true }
+        ).populate('userId', 'name email');
+
+        if (!listing) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Listing not found' 
+            });
+        }
+
+        res.json({ success: true, listing });
+    } catch (error) {
+        console.error('Error updating listing status:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error updating listing status',
+            error: error.message 
+        });
+    }
+});
+
 // Get all users
 router.get('/users', adminAuth, async (req, res) => {
     try {

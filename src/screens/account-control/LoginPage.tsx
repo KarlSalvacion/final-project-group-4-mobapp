@@ -48,29 +48,50 @@ const LoginPage: React.FC = () => {
   const handleLogin = async (values: FormValues) => {
     try {
       setIsLoading(true);
+      console.log('Attempting login to:', `${BACKEND_BASE_URL}/api/users/login`);
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
       const response = await fetch(`${BACKEND_BASE_URL}/api/users/login`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
         body: JSON.stringify({
           email: values.email,
           password: values.password,
         }),
+        signal: controller.signal
       });
+
+      clearTimeout(timeoutId);
+      console.log('Response status:', response.status);
 
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('Login failed with status:', response.status, 'Error:', errorData);
         throw new Error(errorData.message || 'Login failed');
       }
 
       const data = await response.json();
+      console.log('Login successful, received data:', { token: data.token ? 'present' : 'missing', user: data.user ? 'present' : 'missing' });
       const { token, user } = data;
 
-      const userType = isAdminUser(values.email) ? 'admin' : 'user';
-      await login(values.email, userType, user, token);
+      await login(values.email, user, token);
 
-    } catch (error) {
-      Alert.alert('Error', error instanceof Error ? error.message : 'Login failed. Please try again.');
+    } catch (error: unknown) {
+      console.error('Login error details:', {
+        name: error instanceof Error ? error.name : 'unknown',
+        message: error instanceof Error ? error.message : 'unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      if (error instanceof Error && error.name === 'AbortError') {
+        Alert.alert('Error', 'Request timed out. Please check your internet connection and try again.');
+      } else {
+        Alert.alert('Error', error instanceof Error ? error.message : 'Login failed. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
