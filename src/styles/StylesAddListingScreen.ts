@@ -93,7 +93,7 @@ export const stylesAddListingScreen = StyleSheet.create({
     },
 
     requiredInput: {
-        borderColor: 'red',
+        borderColor: 'gray',
     },
 
     inputText: {
@@ -101,45 +101,80 @@ export const stylesAddListingScreen = StyleSheet.create({
         color: '#333',
     },
     pickerContainer: {  
-        width: '100%',
-        height: 40,
-        borderWidth: 1,
-        borderColor: 'gray',
-        borderRadius: 5,
-        justifyContent: 'center',
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        backgroundColor: '#fff',
+        borderTopLeftRadius: 15,
+        borderTopRightRadius: 15,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: -2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+        zIndex: 1000,
     },
 
     pickerHeader: { 
-        backgroundColor: 'red',
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        padding: 15,
+        borderBottomWidth: 1,
+        borderBottomColor: '#eee',
+        backgroundColor: '#fff',
+    },
+
+    pickerButtonContainer: {
+        flexDirection: 'row',
+        gap: 10,
     },
 
     pickerButton: {
-        width: '100%',
-        height: 40,
-        borderWidth: 1,
-        borderColor: 'gray',
-        borderRadius: 5,
-        justifyContent: 'center',
+        paddingHorizontal: 20,
+        paddingVertical: 8,
+        backgroundColor: 'rgb(25, 153, 100)',
+        borderRadius: 8,
+    },
+
+    cancelButton: {
+        backgroundColor: '#f1f1f1',
+    },
+
+    cancelButtonText: {
+        color: '#666',
     },
 
     pickerButtonText: { 
-        fontSize: 14,
-        color: '#333',
+        fontSize: 16,
+        color: '#fff',
+        fontWeight: '600',
     },
     
+    picker: {
+        width: '100%',
+        height: 200,
+        backgroundColor: '#fff',
+    },
+
     imageInput: {
         width: '100%',
-        height: 40,
+        height: 45,
         borderWidth: 1,
         borderColor: 'gray',
         borderRadius: 5,
         alignItems: 'center',
         justifyContent: 'center',
+        
     },
 
     imageInputText: {
         fontSize: 16,
-        fontWeight: 400,
+        color: '#333',
+        fontWeight: '600',
     },
 
     image: {

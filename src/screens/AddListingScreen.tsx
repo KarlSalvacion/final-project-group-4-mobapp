@@ -7,16 +7,16 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { Formik, FormikHelpers } from 'formik';
 import * as Yup from 'yup';
 import * as ImagePicker from 'expo-image-picker';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import ImagePreview from '../components/ImagePreview';
 import { listingValidationSchema } from '../validation/ValidationSchema';
 import { useListings } from '../context/ListingContext';
 import { ListingType, Listing } from '../types';
 import { Picker } from '@react-native-picker/picker';
 import * as Location from 'expo-location';
-import { BACKEND_BASE_URL } from '../config/apiConfig';
 import { useAuth } from '../context/AuthContext';
 import { listingService } from '../services/listingService';
+import DatePickerComponent from '../components/DatePickerComponent';
+import TimePickerComponent from '../components/TimePickerComponent';
 
 type RootStackParamList = {
     Home: undefined;
@@ -52,7 +52,10 @@ const AddListingScreen = () => {
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [showTimePicker, setShowTimePicker] = useState(false);
     const [showCategoryPicker, setShowCategoryPicker] = useState(false);
+    const [tempCategory, setTempCategory] = useState('');
     const [locationPermission, setLocationPermission] = useState<boolean | null>(null);
+    const [tempDate, setTempDate] = useState<Date>(new Date());
+    const [tempTime, setTempTime] = useState<Date>(new Date());
     const [formRef, setFormRef] = useState<any>(null);
 
     useEffect(() => {
@@ -189,11 +192,11 @@ const AddListingScreen = () => {
     };
 
     const formatTime = (date: Date): string => {
-        return date.toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit'
-        });
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        return `${hours}:${minutes}`;
     };
+    
 
     return (
         <KeyboardAvoidingView
@@ -240,13 +243,57 @@ const AddListingScreen = () => {
                                         return;
                                     }
 
-                                    let result = await ImagePicker.launchImageLibraryAsync({
-                                        allowsEditing: true,
-                                        quality: 1,
-                                    });
-
-                                    if (!result.canceled) {
-                                        setFieldValue('images', [...values.images, result.assets[0].uri]);
+                                    let result;
+                                    if (values.listingType === 'found') {
+                                        // For found items, show options to take photo or pick from gallery
+                                        Alert.alert(
+                                            "Add Image",
+                                            "Choose an option",
+                                            [
+                                                {
+                                                    text: "Take Photo",
+                                                    onPress: async () => {
+                                                        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+                                                        if (status !== 'granted') {
+                                                            Alert.alert('Permission needed', 'Please grant camera permission to take photos');
+                                                            return;
+                                                        }
+                                                        result = await ImagePicker.launchCameraAsync({
+                                                            allowsEditing: true,
+                                                            quality: 1,
+                                                        });
+                                                        if (!result.canceled) {
+                                                            setFieldValue('images', [...values.images, result.assets[0].uri]);
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    text: "Choose from Gallery",
+                                                    onPress: async () => {
+                                                        result = await ImagePicker.launchImageLibraryAsync({
+                                                            allowsEditing: true,
+                                                            quality: 1,
+                                                        });
+                                                        if (!result.canceled) {
+                                                            setFieldValue('images', [...values.images, result.assets[0].uri]);
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    text: "Cancel",
+                                                    style: "cancel"
+                                                }
+                                            ]
+                                        );
+                                    } else {
+                                        // For lost items, only allow picking from gallery
+                                        result = await ImagePicker.launchImageLibraryAsync({
+                                            allowsEditing: true,
+                                            quality: 1,
+                                        });
+                                        if (!result.canceled) {
+                                            setFieldValue('images', [...values.images, result.assets[0].uri]);
+                                        }
                                     }
                                 };
 
@@ -328,7 +375,10 @@ const AddListingScreen = () => {
                                                     stylesAddListingScreen.input,
                                                     !values.category && stylesAddListingScreen.requiredInput
                                                 ]}
-                                                onPress={() => setShowCategoryPicker(true)}
+                                                onPress={() => {
+                                                    setTempCategory(values.category);
+                                                    setShowCategoryPicker(true);
+                                                }}
                                             >
                                                 <Text style={stylesAddListingScreen.inputText}>
                                                     {values.category || 'Select Category *'}
@@ -337,19 +387,32 @@ const AddListingScreen = () => {
                                             {showCategoryPicker && (
                                                 <View style={stylesAddListingScreen.pickerContainer}>
                                                     <View style={stylesAddListingScreen.pickerHeader}>
-                                                        <TouchableOpacity
-                                                            onPress={() => setShowCategoryPicker(false)}
-                                                            style={stylesAddListingScreen.pickerButton}
-                                                        >
-                                                            <Text style={stylesAddListingScreen.pickerButtonText}>Done</Text>
-                                                        </TouchableOpacity>
+                                                        <View style={stylesAddListingScreen.pickerButtonContainer}>
+                                                            <TouchableOpacity
+                                                                onPress={() => {
+                                                                    setShowCategoryPicker(false);
+                                                                }}
+                                                                style={[stylesAddListingScreen.pickerButton, stylesAddListingScreen.cancelButton]}
+                                                            >
+                                                                <Text style={[stylesAddListingScreen.pickerButtonText, stylesAddListingScreen.cancelButtonText]}>Cancel</Text>
+                                                            </TouchableOpacity>
+                                                            <TouchableOpacity
+                                                                onPress={() => {
+                                                                    setFieldValue('category', tempCategory);
+                                                                    setShowCategoryPicker(false);
+                                                                }}
+                                                                style={stylesAddListingScreen.pickerButton}
+                                                            >
+                                                                <Text style={stylesAddListingScreen.pickerButtonText}>Done</Text>
+                                                            </TouchableOpacity>
+                                                        </View>
                                                     </View>
                                                     <Picker
-                                                        selectedValue={values.category}
+                                                        selectedValue={tempCategory}
                                                         onValueChange={(itemValue) => {
-                                                            setFieldValue('category', itemValue);
-                                                            setShowCategoryPicker(false);
+                                                            setTempCategory(itemValue);
                                                         }}
+                                                        style={stylesAddListingScreen.picker}
                                                     >
                                                         <Picker.Item label="Select a category" value="" />
                                                         {CATEGORIES.map((category) => (
@@ -365,65 +428,27 @@ const AddListingScreen = () => {
                                         </View>
 
                                         <View style={stylesAddListingScreen.formRow}>
-                                            <Text style={stylesAddListingScreen.label}>Date</Text>
-                                            <TouchableOpacity
-                                                style={[
-                                                    stylesAddListingScreen.input,
-                                                    !values.date && stylesAddListingScreen.requiredInput
-                                                ]}
-                                                onPress={() => setShowDatePicker(true)}
-                                            >
-                                                <Text style={stylesAddListingScreen.inputText}>
-                                                    {values.date || 'Select Date *'}
-                                                </Text>
-                                            </TouchableOpacity>
-                                            {showDatePicker && (
-                                                <DateTimePicker
-                                                    value={values.date ? new Date(values.date) : new Date()}
-                                                    mode="date"
-                                                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                                                    minimumDate={new Date(2024, 0, 1)}
-                                                    maximumDate={new Date(2025, 11, 31)}
-                                                    onChange={(event, selectedDate) => {
-                                                        setShowDatePicker(false);
-                                                        if (selectedDate && event.type !== 'dismissed') {
-                                                            setFieldValue('date', formatDate(selectedDate));
-                                                        }
-                                                    }}
-                                                />
-                                            )}
+                                            <DatePickerComponent
+                                                value={values.date}
+                                                onChange={(date) => setFieldValue('date', date)}
+                                                label={values.listingType === 'found' ? "Date Found" : "Date Lost"}
+                                                required={true}
+                                            />
                                         </View>
 
                                         <View style={stylesAddListingScreen.formRow}>
-                                            <Text style={stylesAddListingScreen.label}>Time</Text>
-                                            <TouchableOpacity
-                                                style={[
-                                                    stylesAddListingScreen.input,
-                                                    !values.time && stylesAddListingScreen.requiredInput
-                                                ]}
-                                                onPress={() => setShowTimePicker(true)}
-                                            >
-                                                <Text style={stylesAddListingScreen.inputText}>
-                                                    {values.time || 'Select Time *'}
-                                                </Text>
-                                            </TouchableOpacity>
-                                            {showTimePicker && (
-                                                <DateTimePicker
-                                                    value={values.time ? new Date(`1970-01-01T${values.time}`) : new Date()}
-                                                    mode="time"
-                                                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                                                    onChange={(event, selectedDate) => {
-                                                        setShowTimePicker(false);
-                                                        if (selectedDate && event.type !== 'dismissed') {
-                                                            setFieldValue('time', formatTime(selectedDate));
-                                                        }
-                                                    }}
-                                                />
-                                            )}
+                                            <TimePickerComponent
+                                                value={values.time}
+                                                onChange={(time) => setFieldValue('time', time)}
+                                                label={values.listingType === 'found' ? "Time Found" : "Approximate Time Lost"}
+                                                required={true}
+                                            />
                                         </View>
 
                                         <View style={stylesAddListingScreen.formRow}>
-                                            <Text style={stylesAddListingScreen.label}>Location</Text>
+                                            <Text style={stylesAddListingScreen.label}>
+                                                {values.listingType === 'found' ? "Location Found" : "Last Known Location"}
+                                            </Text>
                                             {values.listingType === 'found' ? (
                                                 <TouchableOpacity
                                                     style={[
@@ -456,13 +481,17 @@ const AddListingScreen = () => {
                                         </View>
 
                                         <View style={stylesAddListingScreen.formRow}>
-                                            <Text style={stylesAddListingScreen.label}>Images ({values.images.length}/5)</Text>
+                                            <Text style={stylesAddListingScreen.label}>
+                                                Images ({values.images.length}/5)
+                                            </Text>
                                             <TouchableOpacity
                                                 style={stylesAddListingScreen.imageInput}
                                                 onPress={pickImageAsync}
                                             >
                                                 <Text style={stylesAddListingScreen.imageInputText}>
-                                                    {values.images.length === 0 ? 'Select images' : 'Add more images'}
+                                                    {values.images.length === 0 
+                                                        ? (values.listingType === 'found' ? 'Take or select photos' : 'Select images')
+                                                        : 'Add more images'}
                                                 </Text>
                                             </TouchableOpacity>
                                             
