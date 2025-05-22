@@ -27,9 +27,12 @@ const DetailedItemListingScreen = () => {
     const { listings } = useListings();
     const { token } = useAuth();
     const [isClaimModalVisible, setIsClaimModalVisible] = useState(false);
+    const [isFoundModalVisible, setIsFoundModalVisible] = useState(false);
     const [claimExplanation, setClaimExplanation] = useState('');
+    const [foundExplanation, setFoundExplanation] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [proofImages, setProofImages] = useState<string[]>([]);
+    const [foundImages, setFoundImages] = useState<string[]>([]);
     const [userClaims, setUserClaims] = useState<Claim[]>([]);
     const [isLoadingClaims, setIsLoadingClaims] = useState(true);
     
@@ -56,7 +59,7 @@ const DetailedItemListingScreen = () => {
                 }
 
                 const claims = await response.json();
-                console.log('Fetched claims:', claims); // Debug log
+                console.log('Fetched claims:', claims);
                 setUserClaims(claims);
             } catch (error) {
                 console.error('Error fetching claims:', error);
@@ -70,7 +73,7 @@ const DetailedItemListingScreen = () => {
         }
     }, [token, listingId]);
 
-    const pickImage = async () => {
+    const pickImage = async (isFound: boolean = false) => {
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
@@ -79,21 +82,35 @@ const DetailedItemListingScreen = () => {
         });
 
         if (!result.canceled && result.assets[0].uri) {
-            setProofImages([...proofImages, result.assets[0].uri]);
+            if (isFound) {
+                setFoundImages([...foundImages, result.assets[0].uri]);
+            } else {
+                setProofImages([...proofImages, result.assets[0].uri]);
+            }
         }
     };
 
-    const removeImage = (index: number) => {
-        setProofImages(proofImages.filter((_, i) => i !== index));
+    const removeImage = (index: number, isFound: boolean = false) => {
+        if (isFound) {
+            setFoundImages(foundImages.filter((_, i) => i !== index));
+        } else {
+            setProofImages(proofImages.filter((_, i) => i !== index));
+        }
     };
 
     const handleClaim = async () => {
+        if (!listing) {
+            Alert.alert('Error', 'Listing not found.');
+            return;
+        }
+
         if (!claimExplanation.trim()) {
             Alert.alert('Error', 'Please provide an explanation for your claim.');
             return;
         }
 
-        if (proofImages.length === 0) {
+        // Only require images for found items
+        if (listing.type === 'found' && proofImages.length === 0) {
             Alert.alert('Error', 'Please provide at least one proof image.');
             return;
         }
@@ -101,7 +118,7 @@ const DetailedItemListingScreen = () => {
         try {
             setIsSubmitting(true);
             const formData = new FormData();
-            formData.append('listingId', listing?._id || '');
+            formData.append('listingId', listing._id);
             formData.append('description', claimExplanation);
 
             proofImages.forEach((uri, index) => {
@@ -130,7 +147,6 @@ const DetailedItemListingScreen = () => {
                 throw new Error(errorData.message || 'Failed to submit claim');
             }
 
-            // Add the new claim to userClaims
             const newClaim = await response.json();
             setUserClaims([...userClaims, newClaim]);
 
@@ -153,6 +169,77 @@ const DetailedItemListingScreen = () => {
             Alert.alert(
                 'Error',
                 error instanceof Error ? error.message : 'Failed to submit claim. Please try again.'
+            );
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleFound = async () => {
+        if (!listing) {
+            Alert.alert('Error', 'Listing not found.');
+            return;
+        }
+
+        if (!foundExplanation.trim()) {
+            Alert.alert('Error', 'Please provide details about where you found the item.');
+            return;
+        }
+
+        try {
+            setIsSubmitting(true);
+            const formData = new FormData();
+            formData.append('listingId', listing._id);
+            formData.append('description', foundExplanation);
+
+            foundImages.forEach((uri, index) => {
+                const filename = uri.split('/').pop();
+                const match = /\.(\w+)$/.exec(filename || '');
+                const type = match ? `image/${match[1]}` : 'image/jpeg';
+                
+                formData.append('proofImages', {
+                    uri,
+                    name: filename,
+                    type,
+                } as any);
+            });
+
+            const response = await fetch(`${BACKEND_BASE_URL}/api/claims`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'multipart/form-data',
+                },
+                body: formData,
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to submit found item');
+            }
+
+            const newClaim = await response.json();
+            setUserClaims([...userClaims, newClaim]);
+
+            Alert.alert(
+                'Success',
+                'Thank you for reporting that you found this item. The owner will be notified.',
+                [
+                    {
+                        text: 'OK',
+                        onPress: () => {
+                            setIsFoundModalVisible(false);
+                            setFoundExplanation('');
+                            setFoundImages([]);
+                            navigation.goBack();
+                        }
+                    }
+                ]
+            );
+        } catch (error) {
+            Alert.alert(
+                'Error',
+                error instanceof Error ? error.message : 'Failed to submit found item. Please try again.'
             );
         } finally {
             setIsSubmitting(false);
@@ -221,7 +308,7 @@ const DetailedItemListingScreen = () => {
                             </Text>
                         </View>
 
-                        {listing.type === 'found' && (
+                        {listing.type === 'found' ? (
                             <TouchableOpacity
                                 style={[
                                     stylesDetailedItemListing.claimButton,
@@ -238,10 +325,28 @@ const DetailedItemListingScreen = () => {
                                     </Text>
                                 )}
                             </TouchableOpacity>
+                        ) : (
+                            <TouchableOpacity
+                                style={[
+                                    stylesDetailedItemListing.claimButton,
+                                    (hasExistingClaim || isLoadingClaims) && stylesDetailedItemListing.claimButtonDisabled
+                                ]}
+                                onPress={() => setIsFoundModalVisible(true)}
+                                disabled={hasExistingClaim || isLoadingClaims}
+                            >
+                                {isLoadingClaims ? (
+                                    <ActivityIndicator color="#fff" />
+                                ) : (
+                                    <Text style={stylesDetailedItemListing.claimButtonText}>
+                                        {hasExistingClaim ? 'Found Pending' : 'I Found This Item'}
+                                    </Text>
+                                )}
+                            </TouchableOpacity>
                         )}
                     </View>
                 </ScrollView>
 
+                {/* Claim Modal */}
                 <Modal
                     visible={isClaimModalVisible}
                     transparent={true}
@@ -262,7 +367,9 @@ const DetailedItemListingScreen = () => {
                                         <View>
                                             <Text style={stylesDetailedItemListing.modalTitle}>Claim This Item</Text>
                                             <Text style={stylesDetailedItemListing.modalSubtitle}>
-                                                Please provide details about why you believe this item belongs to you.
+                                                {listing.type === 'found' 
+                                                    ? 'Please provide details about why you believe this item belongs to you.'
+                                                    : 'Please provide details about why you believe this is your lost item.'}
                                             </Text>
                                             
                                             <TextInput
@@ -275,10 +382,12 @@ const DetailedItemListingScreen = () => {
                                             />
 
                                             <View style={stylesDetailedItemListing.imageUploadContainer}>
-                                                <Text style={stylesDetailedItemListing.imageUploadTitle}>Proof Images</Text>
+                                                <Text style={stylesDetailedItemListing.imageUploadTitle}>
+                                                    Proof Images {listing.type === 'lost' && '(Optional)'}
+                                                </Text>
                                                 <TouchableOpacity
                                                     style={stylesDetailedItemListing.imageUploadButton}
-                                                    onPress={pickImage}
+                                                    onPress={() => pickImage(false)}
                                                     disabled={proofImages.length >= 3}
                                                 >
                                                     <Ionicons name="camera" size={24} color="#fff" />
@@ -296,7 +405,7 @@ const DetailedItemListingScreen = () => {
                                                             />
                                                             <TouchableOpacity
                                                                 style={stylesDetailedItemListing.removeImageButton}
-                                                                onPress={() => removeImage(index)}
+                                                                onPress={() => removeImage(index, false)}
                                                             >
                                                                 <Ionicons name="close-circle" size={24} color="#fff" />
                                                             </TouchableOpacity>
@@ -327,6 +436,105 @@ const DetailedItemListingScreen = () => {
                                                         <ActivityIndicator color="#fff" />
                                                     ) : (
                                                         <Text style={stylesDetailedItemListing.modalButtonText}>Submit Claim</Text>
+                                                    )}
+                                                </TouchableOpacity>
+                                            </View>
+                                        </View>
+                                    </TouchableWithoutFeedback>
+                                </KeyboardAvoidingView>
+                            </TouchableWithoutFeedback>
+                        </View>
+                    </TouchableWithoutFeedback>
+                </Modal>
+
+                {/* Found Modal */}
+                <Modal
+                    visible={isFoundModalVisible}
+                    transparent={true}
+                    animationType="slide"
+                    onRequestClose={() => setIsFoundModalVisible(false)}
+                >
+                    <TouchableWithoutFeedback onPress={() => {
+                        Keyboard.dismiss();
+                        setIsFoundModalVisible(false);
+                    }}>
+                        <View style={stylesDetailedItemListing.modalContainer}>
+                            <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+                                <KeyboardAvoidingView 
+                                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                                    style={stylesDetailedItemListing.modalContent}
+                                >
+                                    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                                        <View>
+                                            <Text style={stylesDetailedItemListing.modalTitle}>I Found This Item</Text>
+                                            <Text style={stylesDetailedItemListing.modalSubtitle}>
+                                                Please provide details about where and how you found this item.
+                                            </Text>
+                                            
+                                            <TextInput
+                                                style={stylesDetailedItemListing.claimInput}
+                                                multiline
+                                                numberOfLines={6}
+                                                placeholder="Describe where and how you found this item..."
+                                                value={foundExplanation}
+                                                onChangeText={setFoundExplanation}
+                                            />
+
+                                            <View style={stylesDetailedItemListing.imageUploadContainer}>
+                                                <Text style={stylesDetailedItemListing.imageUploadTitle}>
+                                                    Images (Optional)
+                                                </Text>
+                                                <TouchableOpacity
+                                                    style={stylesDetailedItemListing.imageUploadButton}
+                                                    onPress={() => pickImage(true)}
+                                                    disabled={foundImages.length >= 3}
+                                                >
+                                                    <Ionicons name="camera" size={24} color="#fff" />
+                                                    <Text style={stylesDetailedItemListing.imageUploadButtonText}>
+                                                        Add Image
+                                                    </Text>
+                                                </TouchableOpacity>
+
+                                                <View style={stylesDetailedItemListing.imagePreviewContainer}>
+                                                    {foundImages.map((uri, index) => (
+                                                        <View key={index} style={stylesDetailedItemListing.imagePreviewWrapper}>
+                                                            <Image
+                                                                source={{ uri }}
+                                                                style={stylesDetailedItemListing.imagePreview}
+                                                            />
+                                                            <TouchableOpacity
+                                                                style={stylesDetailedItemListing.removeImageButton}
+                                                                onPress={() => removeImage(index, true)}
+                                                            >
+                                                                <Ionicons name="close-circle" size={24} color="#fff" />
+                                                            </TouchableOpacity>
+                                                        </View>
+                                                    ))}
+                                                </View>
+                                            </View>
+
+                                            <View style={stylesDetailedItemListing.modalButtons}>
+                                                <TouchableOpacity
+                                                    style={[stylesDetailedItemListing.modalButton, stylesDetailedItemListing.cancelButton]}
+                                                    onPress={() => {
+                                                        setIsFoundModalVisible(false);
+                                                        setFoundExplanation('');
+                                                        setFoundImages([]);
+                                                    }}
+                                                    disabled={isSubmitting}
+                                                >
+                                                    <Text style={stylesDetailedItemListing.modalCancelButtonText}>Cancel</Text>
+                                                </TouchableOpacity>
+
+                                                <TouchableOpacity
+                                                    style={[stylesDetailedItemListing.modalButton, stylesDetailedItemListing.submitButton]}
+                                                    onPress={handleFound}
+                                                    disabled={isSubmitting}
+                                                >
+                                                    {isSubmitting ? (
+                                                        <ActivityIndicator color="#fff" />
+                                                    ) : (
+                                                        <Text style={stylesDetailedItemListing.modalButtonText}>Submit</Text>
                                                     )}
                                                 </TouchableOpacity>
                                             </View>
