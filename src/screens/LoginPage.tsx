@@ -43,19 +43,21 @@ const LoginPage: React.FC = () => {
       // TODO: Replace with actual API call to your backend
       // This is a mock response simulating your MongoDB data
       const mockUserData = {
+        _id: "mock-user-id",
         username: "user1",
         email: formData.email,
-        password: formData.password,
         name: "User One",
-        profilePicture: null,
-        role: formData.email === "user1@example.com" ? "admin" : "user"
+        profilePhoto: undefined,
+        role: formData.email === "user1@example.com" ? "admin" as const : "user" as const,
+        createdAt: new Date().toISOString()
       };
 
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Login with user data
-      login(mockUserData);
+      const mockToken = 'mock-jwt-token';
+      login(formData.email, mockUserData, mockToken);
       console.log('Login successful as:', mockUserData.role);
 
     } catch (error) {
@@ -117,11 +119,11 @@ const LoginPage: React.FC = () => {
         </TouchableOpacity>
 
         <TouchableOpacity 
-          style={styles.forgotPassword} 
+          style={styles.createAccountButton} 
           onPress={handleForgotPassword}
           disabled={isLoading}
         >
-          <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+          <Text style={styles.createAccountText}>Forgot Password?</Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
