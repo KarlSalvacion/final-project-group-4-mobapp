@@ -7,6 +7,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
 import { styles } from '../styles/components/StylesLoginPage';
 import { useAuth } from '../context/AuthContext';
@@ -77,7 +78,11 @@ const LoginPage: React.FC = () => {
     >
       <View style={styles.formContainer}>
         <View style={styles.logoContainer}>
-          <Text style={styles.logoText}>LOKÉ</Text>
+          <Image 
+            source={require('../assets/login-logo.png')}
+            style={styles.loginLogo}
+            resizeMode="contain"
+          />
         </View>
         <Text style={styles.subtitle}>Sign in to continue</Text>
 

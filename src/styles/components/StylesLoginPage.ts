@@ -1,9 +1,10 @@
-import { StyleSheet, ViewStyle, TextStyle } from 'react-native';
+import { StyleSheet, ViewStyle, TextStyle, ImageStyle } from 'react-native';
 
 interface LoginPageStyles {
   container: ViewStyle;
   formContainer: ViewStyle;
   logoContainer: ViewStyle;
+  loginLogo: ImageStyle;
   logoText: TextStyle;
   title: TextStyle;
   subtitle: TextStyle;
@@ -39,6 +40,10 @@ export const styles = StyleSheet.create<LoginPageStyles>({
   logoContainer: {
     alignItems: 'center',
     marginBottom: 20,
+  },
+  loginLogo: {
+    width: 200,
+    height: 100,
   },
   logoText: {
     fontSize: 48,
