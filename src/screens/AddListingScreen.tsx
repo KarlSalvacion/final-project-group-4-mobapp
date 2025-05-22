@@ -360,7 +360,9 @@ const AddListingScreen = () => {
                                         <View style={stylesAddListingScreen.formRow}>
                                             <Text style={stylesAddListingScreen.label}>Description</Text>
                                             <TextInput
-                                                style={stylesAddListingScreen.input}
+                                                style={[stylesAddListingScreen.input, stylesAddListingScreen.descriptionInput]}
+                                                multiline={true}
+                                                numberOfLines={6}
                                                 placeholder="Description"
                                                 value={values.description}
                                                 onChangeText={handleChange('description')}

@@ -213,7 +213,7 @@ const ProfileScreen = () => {
                             style={[stylesProfileScreen.button, stylesProfileScreen.deleteButton]}
                             onPress={handleDeleteAccount}
                         >
-                            <Ionicons name="trash-outline" size={24} color="#ff4d4d" />
+                            <Ionicons name="trash-outline" size={24} color="#fff" />
                             <Text style={stylesProfileScreen.buttonText}>Delete Account</Text>
                         </TouchableOpacity>
                     </View>

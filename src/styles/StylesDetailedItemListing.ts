@@ -127,13 +127,23 @@ export const stylesDetailedItemListing = StyleSheet.create({
         alignItems: 'center',
     },
     cancelButton: {
-        backgroundColor: '#ccc',
+        backgroundColor: '#fff',
+        borderWidth: 1,
+        borderColor: 'rgb(25, 153, 100)',
     },
     submitButton: {
         backgroundColor: 'rgb(25, 153, 100)',
+        borderWidth: 1,
+        borderColor: 'rgb(25, 153, 100)',
     },
     modalButtonText: {
         color: '#fff',
+        fontSize: 16,
+        fontWeight: '500',
+    },
+
+    modalCancelButtonText: {
+        color: 'rgb(25, 153, 100)',
         fontSize: 16,
         fontWeight: '500',
     },
@@ -169,6 +179,9 @@ export const stylesDetailedItemListing = StyleSheet.create({
         width: 100,
         height: 100,
         position: 'relative',
+        borderWidth: 2,
+        borderColor: 'rgb(83, 83, 83)',
+        borderRadius: 5,
     },
     imagePreview: {
         width: '100%',

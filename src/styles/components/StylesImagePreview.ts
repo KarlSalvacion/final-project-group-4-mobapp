@@ -30,13 +30,13 @@ export const stylesImagePreview = StyleSheet.create({
         position: 'absolute',
         top: 5,
         right: 0,
-        backgroundColor: 'rgb(227, 85, 85)',
+        backgroundColor: 'rgb(227, 227, 227)',
         borderRadius: 20,
         padding: 0,
         alignItems: 'center',
         justifyContent: 'center',   
         borderWidth: 2,
-        borderColor: 'rgb(34, 34, 34)',
+        borderColor: 'rgb(148, 148, 148)',
     },
 
     deleteButtonIcon: {

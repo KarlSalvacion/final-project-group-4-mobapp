@@ -315,7 +315,7 @@ const DetailedItemListingScreen = () => {
                                                     }}
                                                     disabled={isSubmitting}
                                                 >
-                                                    <Text style={stylesDetailedItemListing.modalButtonText}>Cancel</Text>
+                                                    <Text style={stylesDetailedItemListing.modalCancelButtonText}>Cancel</Text>
                                                 </TouchableOpacity>
 
                                                 <TouchableOpacity

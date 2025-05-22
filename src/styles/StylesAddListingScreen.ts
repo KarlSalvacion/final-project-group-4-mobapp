@@ -92,6 +92,16 @@ export const stylesAddListingScreen = StyleSheet.create({
         justifyContent: 'center',
     },
 
+    descriptionInput: {
+        height: 100,
+        textAlignVertical: 'top',
+        paddingTop: 10,
+        paddingHorizontal: 10,
+        textAlign: 'left',
+        alignItems: 'flex-start',
+        justifyContent: 'flex-start',
+    },
+
     requiredInput: {
         borderColor: 'gray',
     },

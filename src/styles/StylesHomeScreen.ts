@@ -5,14 +5,24 @@ export const stylesHomeScreen = StyleSheet.create({
         flex: 1,
         backgroundColor: '#fff',
     },
+    headerTouchable: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
+    },
     headerContainer: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        height: 120,
-        width: '100%',
         backgroundColor: 'rgb(25, 153, 100)',
         paddingHorizontal: 20,
+        zIndex: 1000,
     },
     headerContent: {
         flexDirection: 'row',
@@ -20,8 +30,7 @@ export const stylesHomeScreen = StyleSheet.create({
         alignItems: 'center',
     },
     headerLogo: {
-        width: 180,
-        height: 100,
+        resizeMode: 'contain',
     },
     profileButton: {
         padding: 8,
