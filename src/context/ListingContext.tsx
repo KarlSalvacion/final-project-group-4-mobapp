@@ -24,7 +24,7 @@ export interface Listing {
 
 interface ListingContextType {
     listings: Listing[];
-    addListing: (listing: Omit<Listing, '_id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+    addListing: (listing: Listing | Omit<Listing, '_id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
     fetchListings: (page?: number, limit?: number) => Promise<void>;
     isLoading: boolean;
     error: string | null;
@@ -78,55 +78,16 @@ export const ListingProvider = ({ children }: { children: React.ReactNode }) => 
         }
     };
 
-    const addListing = async (listing: Omit<Listing, '_id' | 'createdAt' | 'updatedAt'>) => {
+    const addListing = async (listing: Listing | Omit<Listing, '_id' | 'createdAt' | 'updatedAt'>) => {
         try {
             setError(null); // Clear any existing errors
-            const token = await AsyncStorage.getItem('jwtToken');
-            if (!token) {
-                throw new Error('No authentication token found');
-            }
-
-            const formData = new FormData();
-            Object.entries(listing).forEach(([key, value]) => {
-                if (key === 'images' && Array.isArray(value)) {
-                    value.forEach((image: string) => {
-                        const imageUri = image;
-                        const filename = imageUri.split('/').pop() || 'image.jpg';
-                        const match = /\.(\w+)$/.exec(filename);
-                        const type = match ? `image/${match[1]}` : 'image/jpeg';
-                        
-                        formData.append('images', {
-                            uri: imageUri,
-                            type,
-                            name: filename,
-                        } as any);
-                    });
-                } else if (typeof value === 'string') {
-                    formData.append(key, value);
-                }
-            });
-
-            const response = await fetch(`${BACKEND_BASE_URL}/api/listings`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Accept': 'application/json',
-                },
-                body: formData,
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to create listing');
-            }
-
-            const newListing = await response.json();
-            setListings(prev => [newListing, ...prev]);
+            // Update the listings state with the new listing
+            setListings(prev => [listing as Listing, ...prev]);
             setError(null); // Ensure error is cleared on success
         } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : 'An error occurred while creating listing';
+            const errorMessage = err instanceof Error ? err.message : 'An error occurred while updating listings';
             setError(errorMessage);
-            console.error('Error creating listing:', err);
+            console.error('Error updating listings:', err);
             throw err;
         }
     };

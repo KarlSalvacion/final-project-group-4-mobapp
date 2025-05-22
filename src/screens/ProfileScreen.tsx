@@ -30,6 +30,9 @@ const ProfileScreen = () => {
         if (!dateString) return 'Not available';
         try {
             const date = new Date(dateString);
+            if (isNaN(date.getTime())) {
+                return 'Not available';
+            }
             return date.toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'long',
@@ -37,7 +40,7 @@ const ProfileScreen = () => {
             });
         } catch (error) {
             console.error('Date formatting error:', error);
-            return 'Invalid date';
+            return 'Not available';
         }
     };
 

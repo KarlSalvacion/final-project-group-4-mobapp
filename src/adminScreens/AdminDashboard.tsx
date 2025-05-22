@@ -23,16 +23,21 @@ const AdminDashboard = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [refreshing, setRefreshing] = useState(false);
+    const [serverAvailable, setServerAvailable] = useState(true);
 
-    const ticketStats = {
+    const ticketStats = serverAvailable ? {
         pending: claims.filter(claim => claim.status === 'pending').length,
         approved: claims.filter(claim => claim.status === 'approved').length,
         rejected: claims.filter(claim => claim.status === 'rejected').length
+    } : {
+        pending: 0,
+        approved: 0,
+        rejected: 0
     };
 
-    const recentTickets = claims
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        .slice(0, 3);
+    const recentTickets = serverAvailable ?
+        claims.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 3)
+        : [];
 
     const fetchClaims = useCallback(async () => {
         try {
@@ -104,7 +109,7 @@ const AdminDashboard = () => {
 
     if (loading && !refreshing) {
         return (
-            <View style={[stylesAdminDashboard.mainContainer, { justifyContent: 'center', alignItems: 'center' }]}>
+            <View style={[stylesAdminDashboard.mainContainer, { justifyContent: 'center', alignItems: 'center' }]}> 
                 <ActivityIndicator size="large" color="rgb(25, 153, 100)" />
             </View>
         );

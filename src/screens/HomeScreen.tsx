@@ -96,38 +96,33 @@ const HomeScreen = () => {
 
     return (
         <View style={stylesHomeScreen.mainContainer}>
-            <TouchableOpacity 
-                activeOpacity={1}
-                onPress={scrollToTop}
-                style={stylesHomeScreen.headerTouchable}
-            >
-                <Animated.View style={[
-                    stylesHomeScreen.headerContainer,
-                    {
-                        height: headerHeight,
-                    }
-                ]}>
-                    <Animated.View style={stylesHomeScreen.headerContent}>
-                        <Animated.Image 
-                            source={require('../assets/looke_logo.png')}
-                            style={[
-                                stylesHomeScreen.headerLogo,
-                                {
-                                    width: logoWidth,
-                                    height: logoHeight,
-                                }
-                            ]}
-                            resizeMode="contain"
-                        />
-                    </Animated.View>
-                    <TouchableOpacity 
-                        style={stylesHomeScreen.profileButton}
-                        onPress={() => navigation.navigate('Profile')}
-                    >
-                        <Ionicons name="person-circle-outline" size={32} color="#fff" />
-                    </TouchableOpacity>
+            <Animated.View style={[
+                stylesHomeScreen.headerContainer,
+                {
+                    height: headerHeight,
+                    minHeight: HEADER_MIN_HEIGHT,
+                }
+            ]}>
+                <Animated.View style={stylesHomeScreen.headerContent}>
+                    <Animated.Image 
+                        source={require('../assets/looke_logo.png')}
+                        style={[
+                            stylesHomeScreen.headerLogo,
+                            {
+                                width: logoWidth,
+                                height: logoHeight,
+                            }
+                        ]}
+                        resizeMode="contain"
+                    />
                 </Animated.View>
-            </TouchableOpacity>
+                <TouchableOpacity 
+                    style={stylesHomeScreen.profileButton}
+                    onPress={() => navigation.navigate('Profile')}
+                >
+                    <Ionicons name="person-circle-outline" size={32} color="#fff" />
+                </TouchableOpacity>
+            </Animated.View>
 
             <Animated.View style={[
                 stylesHomeScreen.contentContainer,

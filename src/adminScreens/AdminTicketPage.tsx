@@ -13,9 +13,23 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BACKEND_BASE_URL } from '../config/apiConfig';
-import { Claim } from '../types';
 import stylesAdminTicketPage from '../styles/admin/StyleTicketPage';
 import { Ionicons } from '@expo/vector-icons';
+
+interface Claim {
+    _id: string;
+    listingId: {
+        title: string;
+    };
+    userId: {
+        name: string;
+    };
+    status: 'pending' | 'approved' | 'rejected';
+    description: string;
+    proofImages: string[];
+    createdAt: string;
+    updatedAt: string;
+}
 
 const AdminTicketPage = () => {
     const [claims, setClaims] = useState<Claim[]>([]);
@@ -24,6 +38,9 @@ const AdminTicketPage = () => {
     const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
     const [modalVisible, setModalVisible] = useState(false);
     const [notes, setNotes] = useState('');
+    const [activeFilter, setActiveFilter] = useState<'pending' | 'approved' | 'rejected'>('pending');
+
+    const filteredClaims = claims.filter(claim => claim.status === activeFilter);
 
     const fetchClaims = async () => {
         try {
@@ -128,9 +145,10 @@ const AdminTicketPage = () => {
 
     return (
         <View style={stylesAdminTicketPage.mainContainer}>
+            {/* Slimmer Header Bar */}
             <View style={stylesAdminTicketPage.headerContainer}>
                 <View style={stylesAdminTicketPage.headerContent}>
-                    <Image 
+                    <Image
                         source={require('../assets/looke_logo.png')}
                         style={stylesAdminTicketPage.headerLogo}
                         resizeMode="contain"
@@ -138,34 +156,82 @@ const AdminTicketPage = () => {
                 </View>
             </View>
 
-            <FlatList
-                data={claims}
-                keyExtractor={(item) => item._id}
-                renderItem={({ item }) => (
-                    <TouchableOpacity 
-                        style={stylesAdminTicketPage.claimItem}
-                        onPress={() => handleClaimPress(item)}
-                    >
-                        <View style={stylesAdminTicketPage.claimHeader}>
-                            <Text style={stylesAdminTicketPage.claimTitle}>{item.description}</Text>
-                            <View style={[
-                                stylesAdminTicketPage.statusBadge,
-                                { backgroundColor: item.status === 'pending' ? '#FFA500' : 
-                                                item.status === 'approved' ? '#4CAF50' : '#F44336' }
-                            ]}>
-                                <Text style={stylesAdminTicketPage.statusText}>
-                                    {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-                                </Text>
+            {/* Centered Title */}
+            <Text style={stylesAdminTicketPage.headerTitle}>Tickets</Text>
+            
+            {/* Filter Buttons */}
+            <View style={stylesAdminTicketPage.filterRow}>
+                <TouchableOpacity
+                    style={[
+                        stylesAdminTicketPage.filterButton,
+                        stylesAdminTicketPage.pendingButton,
+                        activeFilter === 'pending' ? { opacity: 1 } : { opacity: 0.5 }
+                    ]}
+                    onPress={() => setActiveFilter('pending')}
+                >
+                    <Text style={stylesAdminTicketPage.filterButtonText}>Pending</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[
+                        stylesAdminTicketPage.filterButton,
+                        stylesAdminTicketPage.approvedButton,
+                        activeFilter === 'approved' ? { opacity: 1 } : { opacity: 0.5 }
+                    ]}
+                    onPress={() => setActiveFilter('approved')}
+                >
+                    <Text style={stylesAdminTicketPage.filterButtonText}>Approved</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[
+                        stylesAdminTicketPage.filterButton,
+                        stylesAdminTicketPage.rejectedButton,
+                        activeFilter === 'rejected' ? { opacity: 1 } : { opacity: 0.5 }
+                    ]}
+                    onPress={() => setActiveFilter('rejected')}
+                >
+                    <Text style={stylesAdminTicketPage.filterButtonText}>Rejected</Text>
+                </TouchableOpacity>
+            </View>
+
+            <View style={stylesAdminTicketPage.filterBar}>
+                <Ionicons name="filter" size={20} color="#888" style={stylesAdminTicketPage.filterIcon} />
+                <Text style={stylesAdminTicketPage.filterLabel}>FILTER</Text>
+            </View>
+
+            {filteredClaims.length === 0 ? (
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                    <Text style={{ color: '#888', fontSize: 18, fontWeight: '500' }}>No tickets available</Text>
+                </View>
+            ) : (
+                <FlatList
+                    data={filteredClaims}
+                    keyExtractor={(item) => item._id}
+                    renderItem={({ item }) => (
+                        <TouchableOpacity 
+                            style={stylesAdminTicketPage.claimItem}
+                            onPress={() => handleClaimPress(item)}
+                        >
+                            <View style={stylesAdminTicketPage.claimHeader}>
+                                <Text style={stylesAdminTicketPage.claimTitle}>{item.description}</Text>
+                                <View style={[
+                                    stylesAdminTicketPage.statusBadge,
+                                    { backgroundColor: item.status === 'pending' ? '#FFA500' : 
+                                                    item.status === 'approved' ? '#4CAF50' : '#F44336' }
+                                ]}>
+                                    <Text style={stylesAdminTicketPage.statusText}>
+                                        {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+                                    </Text>
+                                </View>
                             </View>
-                        </View>
-                        <Text style={stylesAdminTicketPage.claimUser}>By: {item.userId.name}</Text>
-                        <Text style={stylesAdminTicketPage.claimDate}>
-                            {new Date(item.createdAt).toLocaleDateString()}
-                        </Text>
-                    </TouchableOpacity>
-                )}
-                contentContainerStyle={stylesAdminTicketPage.listContainer}
-            />
+                            <Text style={stylesAdminTicketPage.claimUser}>By: {item.userId.name}</Text>
+                            <Text style={stylesAdminTicketPage.claimDate}>
+                                {new Date(item.createdAt).toLocaleDateString()}
+                            </Text>
+                        </TouchableOpacity>
+                    )}
+                    contentContainerStyle={stylesAdminTicketPage.listContainer}
+                />
+            )}
 
             <Modal
                 animationType="slide"

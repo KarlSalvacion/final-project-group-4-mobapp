@@ -145,19 +145,8 @@ const AddListingScreen = () => {
 
             const newListing = await listingService.createListing(formData);
             
-            // After successful creation, update the listings in context
-            await addListing({
-                title: values.title,
-                description: values.description,
-                type: values.listingType,
-                category: values.category,
-                location: values.location,
-                date: values.date,
-                time: values.time,
-                images: values.images,
-                userId: newListing.userId,
-                status: 'active'
-            });
+            // Update the listings in context with the response from the server
+            await addListing(newListing);
 
             // Reset the form
             resetForm();

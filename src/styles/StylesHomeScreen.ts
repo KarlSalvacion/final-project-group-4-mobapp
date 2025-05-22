@@ -23,6 +23,7 @@ export const stylesHomeScreen = StyleSheet.create({
         backgroundColor: 'rgb(25, 153, 100)',
         paddingHorizontal: 20,
         zIndex: 1000,
+        elevation: 5,
     },
     headerContent: {
         flexDirection: 'row',

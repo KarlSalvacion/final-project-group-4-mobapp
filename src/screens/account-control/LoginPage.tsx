@@ -67,30 +67,44 @@ const LoginPage: React.FC = () => {
       });
 
       clearTimeout(timeoutId);
-      console.log('Response status:', response.status);
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Login failed with status:', response.status, 'Error:', errorData);
-        throw new Error(errorData.message || 'Login failed');
-      }
 
       const data = await response.json();
-      console.log('Login successful, received data:', { token: data.token ? 'present' : 'missing', user: data.user ? 'present' : 'missing' });
-      const { token, user } = data;
 
+      if (!response.ok) {
+        // Handle specific error cases
+        if (response.status === 400) {
+          if (!values.email || !values.password) {
+            throw new Error('Please fill in all fields');
+          } else if (!values.email.includes('@')) {
+            throw new Error('Please enter a valid email address');
+          } else {
+            throw new Error('Invalid email or password');
+          }
+        } else if (response.status === 401) {
+          throw new Error('Invalid email or password');
+        } else {
+          throw new Error(data.message || 'Login failed. Please try again.');
+        }
+      }
+
+      const { token, user } = data;
+      
+      if (!token || !user) {
+        throw new Error('Invalid response from server');
+      }
+
+      // Call the login function from AuthContext
       await login(values.email, user, token);
 
     } catch (error: unknown) {
-      console.error('Login error details:', {
-        name: error instanceof Error ? error.name : 'unknown',
-        message: error instanceof Error ? error.message : 'unknown error',
-        stack: error instanceof Error ? error.stack : undefined
-      });
-      if (error instanceof Error && error.name === 'AbortError') {
-        Alert.alert('Error', 'Request timed out. Please check your internet connection and try again.');
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          Alert.alert('Error', 'Request timed out. Please check your internet connection and try again.');
+        } else {
+          Alert.alert('Error', error.message);
+        }
       } else {
-        Alert.alert('Error', error instanceof Error ? error.message : 'Login failed. Please try again.');
+        Alert.alert('Error', 'An unexpected error occurred. Please try again.');
       }
     } finally {
       setIsLoading(false);

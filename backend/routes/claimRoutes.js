@@ -51,8 +51,18 @@ router.post('/', upload.array('proofImages', 3), async (req, res) => {
     }
 
     // Check if user is not claiming their own listing
-    if (listing.userId.toString() === req.user.userId) {
-      return res.status(400).json({ message: 'Cannot claim your own listing' });
+    if (!listing.userId || !req.user.userId) {
+      return res.status(400).json({ 
+        message: 'Invalid user or listing data',
+        details: 'Unable to verify listing ownership'
+      });
+    }
+
+    if (String(listing.userId) === String(req.user.userId)) {
+      return res.status(400).json({ 
+        message: 'Cannot claim your own listing',
+        details: 'You cannot claim or report finding your own items'
+      });
     }
 
     // Check for existing pending claim
@@ -74,10 +84,18 @@ router.post('/', upload.array('proofImages', 3), async (req, res) => {
       ...req.body,
       userId: req.user.userId,
       status: 'pending',
-      proofImages: imageUrls
+      proofImages: imageUrls,
+      type: req.body.type || 'claim' // Add type field to distinguish between claims and found items
     });
 
     await claim.save();
+
+    // If this is a found item, update the listing status
+    if (req.body.type === 'found') {
+      listing.status = 'found';
+      await listing.save();
+    }
+
     res.status(201).json(claim);
   } catch (error) {
     res.status(500).json({ message: 'Error creating claim', error: error.message });
