@@ -53,7 +53,7 @@ const AddListingScreen = () => {
     const [showTimePicker, setShowTimePicker] = useState(false);
     const [showCategoryPicker, setShowCategoryPicker] = useState(false);
     const [locationPermission, setLocationPermission] = useState<boolean | null>(null);
-
+    
     useEffect(() => {
         (async () => {
             const { status } = await Location.requestForegroundPermissionsAsync();
@@ -390,6 +390,7 @@ const AddListingScreen = () => {
                                                     mode="date"
                                                     display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                                                     minimumDate={new Date(2024, 0, 1)}
+                                                    maximumDate={new Date(2025, 11, 31)}
                                                     onChange={(event, selectedDate) => {
                                                         setShowDatePicker(false);
                                                         if (selectedDate && event.type !== 'dismissed') {
