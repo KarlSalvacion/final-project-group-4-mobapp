@@ -27,16 +27,7 @@ const AdminDashboard = () => {
     const [claims, setClaims] = useState<Claim[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-
-    const ticketStats = {
-        pending: claims.filter(claim => claim.status === 'pending').length,
-        approved: claims.filter(claim => claim.status === 'approved').length,
-        rejected: claims.filter(claim => claim.status === 'rejected').length
-    };
-
-    const recentTickets = claims
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        .slice(0, 3);
+    const [serverAvailable, setServerAvailable] = useState(true);
 
     useEffect(() => {
         fetchClaims();
@@ -50,46 +41,28 @@ const AdminDashboard = () => {
             }
             const data = await response.json();
             setClaims(data);
+            setServerAvailable(true);
         } catch (err) {
-            // Use mock data when server is not available
-            const mockClaims: Claim[] = [
-                {
-                    _id: '1',
-                    listingId: '101',
-                    userId: 'user1',
-                    status: 'pending',
-                    description: 'Lost ID Card',
-                    proofImages: [],
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString()
-                },
-                {
-                    _id: '2',
-                    listingId: '102',
-                    userId: 'user2',
-                    status: 'approved',
-                    description: 'Found Laptop',
-                    proofImages: [],
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString()
-                },
-                {
-                    _id: '3',
-                    listingId: '103',
-                    userId: 'user3',
-                    status: 'rejected',
-                    description: 'Missing Backpack',
-                    proofImages: [],
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString()
-                }
-            ];
-            setClaims(mockClaims);
-            console.log('Using mock data - Server not available');
+            setClaims([]);
+            setServerAvailable(false);
         } finally {
             setLoading(false);
         }
     };
+
+    const ticketStats = serverAvailable ? {
+        pending: claims.filter(claim => claim.status === 'pending').length,
+        approved: claims.filter(claim => claim.status === 'approved').length,
+        rejected: claims.filter(claim => claim.status === 'rejected').length
+    } : {
+        pending: 0,
+        approved: 0,
+        rejected: 0
+    };
+
+    const recentTickets = serverAvailable ?
+        claims.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 3)
+        : [];
 
     const handleViewAll = () => {
         navigation.navigate('Tickets');
@@ -97,7 +70,7 @@ const AdminDashboard = () => {
 
     if (loading) {
         return (
-            <View style={[stylesAdminDashboard.mainContainer, { justifyContent: 'center', alignItems: 'center' }]}>
+            <View style={[stylesAdminDashboard.mainContainer, { justifyContent: 'center', alignItems: 'center' }]}> 
                 <ActivityIndicator size="large" color="rgb(25, 153, 100)" />
             </View>
         );
@@ -105,7 +78,7 @@ const AdminDashboard = () => {
 
     if (error) {
         return (
-            <View style={[stylesAdminDashboard.mainContainer, { justifyContent: 'center', alignItems: 'center' }]}>
+            <View style={[stylesAdminDashboard.mainContainer, { justifyContent: 'center', alignItems: 'center' }]}> 
                 <Text style={{ color: 'red' }}>{error}</Text>
             </View>
         );
@@ -170,14 +143,20 @@ const AdminDashboard = () => {
                     </View>
 
                     <View style={stylesAdminDashboard.ticketList}>
-                        {recentTickets.map((ticket) => (
-                            <View key={ticket._id} style={stylesAdminDashboard.ticketItem}>
-                                <Text style={stylesAdminDashboard.ticketTitle}>{ticket.description}</Text>
-                                <Text style={stylesAdminDashboard.ticketStatus}>
-                                    Status: {ticket.status.charAt(0).toUpperCase() + ticket.status.slice(1)}
-                                </Text>
+                        {recentTickets.length === 0 ? (
+                            <View style={{ alignItems: 'center', marginTop: 24 }}>
+                                <Text style={{ color: '#888', fontSize: 16, fontWeight: '500' }}>No tickets available</Text>
                             </View>
-                        ))}
+                        ) : (
+                            recentTickets.map((ticket) => (
+                                <View key={ticket._id} style={stylesAdminDashboard.ticketItem}>
+                                    <Text style={stylesAdminDashboard.ticketTitle}>{ticket.description}</Text>
+                                    <Text style={stylesAdminDashboard.ticketStatus}>
+                                        Status: {ticket.status.charAt(0).toUpperCase() + ticket.status.slice(1)}
+                                    </Text>
+                                </View>
+                            ))
+                        )}
                     </View>
                 </View>
             </ScrollView>
