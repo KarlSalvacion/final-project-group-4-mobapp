@@ -178,6 +178,7 @@ export const stylesDetailedItemListing = StyleSheet.create({
         color: '#fff',
         fontSize: 16,
         marginLeft: 8,
+        fontWeight: 600,
     },
     imagePreviewContainer: {
         flexDirection: 'row',
@@ -259,6 +260,24 @@ export const stylesDetailedItemListing = StyleSheet.create({
         fontSize: 14,
         color: '#666',
         marginBottom: 10,
+    },
+    mapContainer: {
+        marginVertical: 20,
+        borderRadius: 10,
+        overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: '#eee',
+    },
+    mapTitle: {
+        fontSize: 16,
+        fontWeight: '500',
+        color: '#333',
+        marginBottom: 10,
+        paddingHorizontal: 20,
+    },
+    map: {
+        width: '100%',
+        height: 200,
     },
 });
 

@@ -26,6 +26,12 @@ const stylesMyListingsScreen = StyleSheet.create({
         fontWeight: 'bold',
         color: '#fff',
     },
+    listingCount: {
+        fontSize: 20,
+        color: '#fff',
+        marginLeft: -10,
+        fontWeight: '500',
+    },
     scrollView: {
         flex: 1,
     },

@@ -8,7 +8,7 @@ import { useListings } from '../context/ListingContext';
 import { useAuth } from '../context/AuthContext';
 import { BACKEND_BASE_URL } from '../config/apiConfig';
 import * as ImagePicker from 'expo-image-picker';
-import { Listing, Claim } from '../types';
+import { Listing, Claim } from '../types/index';
 import ImageCarousel from '../components/ImageCarousel';
 
 type RootStackParamList = {
@@ -76,17 +76,58 @@ const DetailedItemListingScreen = () => {
     }, [token, listingId]);
 
     const pickImage = async (isFound: boolean = false) => {
-        const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            aspect: [4, 3],
-            quality: 1,
-        });
-
-        if (!result.canceled && result.assets[0].uri) {
-            if (isFound) {
-                setFoundImages([...foundImages, result.assets[0].uri]);
-            } else {
+        let result;
+        if (isFound) {
+            // For found items, show options to take photo or pick from gallery
+            Alert.alert(
+                "Add Image",
+                "Choose an option",
+                [
+                    {
+                        text: "Take Photo",
+                        onPress: async () => {
+                            const { status } = await ImagePicker.requestCameraPermissionsAsync();
+                            if (status !== 'granted') {
+                                Alert.alert('Permission needed', 'Please grant camera permission to take photos');
+                                return;
+                            }
+                            result = await ImagePicker.launchCameraAsync({
+                                allowsEditing: true,
+                                quality: 0.5,
+                                exif: false,
+                            });
+                            if (!result.canceled) {
+                                setFoundImages([...foundImages, result.assets[0].uri]);
+                            }
+                        }
+                    },
+                    {
+                        text: "Choose from Gallery",
+                        onPress: async () => {
+                            result = await ImagePicker.launchImageLibraryAsync({
+                                allowsEditing: true,
+                                quality: 0.5,
+                                exif: false,
+                            });
+                            if (!result.canceled) {
+                                setFoundImages([...foundImages, result.assets[0].uri]);
+                            }
+                        }
+                    },
+                    {
+                        text: "Cancel",
+                        style: "cancel"
+                    }
+                ]
+            );
+        } else {
+            // For claims, only allow picking from gallery
+            result = await ImagePicker.launchImageLibraryAsync({
+                allowsEditing: true,
+                quality: 0.5,
+                exif: false,
+            });
+            if (!result.canceled) {
                 setProofImages([...proofImages, result.assets[0].uri]);
             }
         }
@@ -686,6 +727,7 @@ const DetailedItemListingScreen = () => {
                                                     multiline
                                                     numberOfLines={6}
                                                     placeholder="Describe where and how you found this item..."
+                                                    placeholderTextColor={'#999'}
                                                     value={foundExplanation}
                                                     onChangeText={setFoundExplanation}
                                                 />
@@ -710,7 +752,7 @@ const DetailedItemListingScreen = () => {
                                                 >
                                                     <Ionicons name="camera" size={24} color="#fff" />
                                                     <Text style={stylesDetailedItemListing.imageUploadButtonText}>
-                                                        Add Image
+                                                        {foundImages.length === 0 ? 'Take or select photos' : 'Add more images'}
                                                     </Text>
                                                 </TouchableOpacity>
 

@@ -130,6 +130,25 @@ export const stylesAddListingScreen = StyleSheet.create({
         justifyContent: 'flex-start',
     },
 
+
+    locationInput: {
+        width: '100%',
+        height: 80,
+        borderWidth: 1,
+        borderColor: 'gray',
+        borderRadius: 5,
+        paddingHorizontal: 10,
+        justifyContent: 'center',
+    },
+    locationButton: {
+        position: 'absolute',
+        right: 10,
+        bottom: 10,
+        backgroundColor: 'rgb(25, 153, 100)',
+        padding: 8,
+        borderRadius: 20,
+        elevation: 2,
+    },
     requiredInput: {
         borderColor: 'gray',
     },

@@ -2,29 +2,15 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { BACKEND_BASE_URL } from '../config/apiConfig';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from './AuthContext';
-
-export interface Listing {
-    _id: string;
-    title: string;
-    description: string;
-    category: string;
-    type: 'lost' | 'found';
-    date: string;
-    time: string;
-    location: string;
-    images: string[];
-    createdAt: string;
-    userId: {
-        _id: string;
-        name: string;
-        username: string;
-    };
-    status: string;
-}
+import { Listing } from '../types';
+import { listingService } from '../services/listingService';
 
 interface ListingContextType {
     listings: Listing[];
-    addListing: (listing: Listing | Omit<Listing, '_id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+    addListing: (listing: Listing) => Promise<void>;
+    updateListing: (listing: Listing) => Promise<void>;
+    deleteListing: (id: string) => Promise<void>;
+    refreshListings: () => Promise<void>;
     fetchListings: (page?: number, limit?: number) => Promise<void>;
     isLoading: boolean;
     error: string | null;
@@ -34,13 +20,13 @@ interface ListingContextType {
 
 const ListingContext = createContext<ListingContextType | undefined>(undefined);
 
-export const ListingProvider = ({ children }: { children: React.ReactNode }) => {
+export const ListingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [listings, setListings] = useState<Listing[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [hasMore, setHasMore] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, token } = useAuth();
 
     const fetchListings = async (page = 1, limit = 10) => {
         try {
@@ -78,17 +64,53 @@ export const ListingProvider = ({ children }: { children: React.ReactNode }) => 
         }
     };
 
-    const addListing = async (listing: Listing | Omit<Listing, '_id' | 'createdAt' | 'updatedAt'>) => {
+    const addListing = async (listing: Listing) => {
         try {
             setError(null); // Clear any existing errors
             // Update the listings state with the new listing
-            setListings(prev => [listing as Listing, ...prev]);
+            setListings(prev => [listing, ...prev]);
             setError(null); // Ensure error is cleared on success
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'An error occurred while updating listings';
             setError(errorMessage);
             console.error('Error updating listings:', err);
             throw err;
+        }
+    };
+
+    const updateListing = async (listing: Listing) => {
+        try {
+            setError(null); // Clear any existing errors
+            // Update the listings state with the updated listing
+            setListings(prev => prev.map(l => l._id === listing._id ? listing : l));
+            setError(null); // Ensure error is cleared on success
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : 'An error occurred while updating listings';
+            setError(errorMessage);
+            console.error('Error updating listings:', err);
+            throw err;
+        }
+    };
+
+    const deleteListing = async (id: string) => {
+        try {
+            setError(null); // Clear any existing errors
+            // Update the listings state by removing the listing with the specified id
+            setListings(prev => prev.filter(l => l._id !== id));
+            setError(null); // Ensure error is cleared on success
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : 'An error occurred while deleting listings';
+            setError(errorMessage);
+            console.error('Error deleting listings:', err);
+            throw err;
+        }
+    };
+
+    const refreshListings = async () => {
+        try {
+            await fetchListings(1);
+        } catch (err) {
+            console.error('Error refreshing listings:', err);
         }
     };
 
@@ -109,6 +131,9 @@ export const ListingProvider = ({ children }: { children: React.ReactNode }) => 
             value={{ 
                 listings, 
                 addListing, 
+                updateListing,
+                deleteListing,
+                refreshListings,
                 fetchListings, 
                 isLoading, 
                 error,

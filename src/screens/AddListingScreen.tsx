@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { View, Text, TouchableOpacity, TextInput, Image, ScrollView, TouchableWithoutFeedback, Keyboard, Alert, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { stylesAddListingScreen } from '../styles/StylesAddListingScreen';
@@ -10,13 +10,13 @@ import * as ImagePicker from 'expo-image-picker';
 import ImagePreview from '../components/ImagePreview';
 import { listingValidationSchema } from '../validation/ValidationSchema';
 import { useListings } from '../context/ListingContext';
-import { ListingType, Listing } from '../types';
+import { ListingType } from '../types';
 import { Picker } from '@react-native-picker/picker';
-import * as Location from 'expo-location';
 import { useAuth } from '../context/AuthContext';
 import { listingService } from '../services/listingService';
 import DatePickerComponent from '../components/DatePickerComponent';
 import TimePickerComponent from '../components/TimePickerComponent';
+import * as Location from 'expo-location';
 
 type RootStackParamList = {
     Home: undefined;
@@ -53,57 +53,11 @@ const AddListingScreen = () => {
     const [showTimePicker, setShowTimePicker] = useState(false);
     const [showCategoryPicker, setShowCategoryPicker] = useState(false);
     const [tempCategory, setTempCategory] = useState('');
-    const [locationPermission, setLocationPermission] = useState<boolean | null>(null);
     const [tempDate, setTempDate] = useState<Date>(new Date());
     const [tempTime, setTempTime] = useState<Date>(new Date());
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isGettingLocation, setIsGettingLocation] = useState(false);
     const formRef = useRef<any>(null);
-
-    useEffect(() => {
-        (async () => {
-            const { status } = await Location.requestForegroundPermissionsAsync();
-            setLocationPermission(status === 'granted');
-        })();
-    }, []);
-
-    const getCurrentLocation = async () => {
-        try {
-            if (!locationPermission) {
-                Alert.alert(
-                    "Location Permission Required",
-                    "Please enable location services to automatically get your location for found items."
-                );
-                return null;
-            }
-
-            const location = await Location.getCurrentPositionAsync({});
-            const { latitude, longitude } = location.coords;
-            
-            // Get address from coordinates
-            const [address] = await Location.reverseGeocodeAsync({
-                latitude,
-                longitude
-            });
-
-            if (address) {
-                const locationString = [
-                    address.street,
-                    address.city,
-                    address.region,
-                    address.postalCode
-                ].filter(Boolean).join(', ');
-                return locationString;
-            }
-            return `${latitude}, ${longitude}`;
-        } catch (error) {
-            console.error('Error getting location:', error);
-            Alert.alert(
-                "Location Error",
-                "Failed to get your current location. Please enter the location manually."
-            );
-            return null;
-        }
-    };
 
     const handleSubmit = async (values: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
         if (!token) {
@@ -124,7 +78,6 @@ const AddListingScreen = () => {
 
         try {
             setIsSubmitting(true);
-            // Create FormData for multipart/form-data
             const formData = new FormData();
             
             // Append images
@@ -256,6 +209,43 @@ const AddListingScreen = () => {
                             onSubmit={handleSubmit}
                         >
                             {({ handleChange, handleBlur, handleSubmit, values, errors, setFieldValue, resetForm }) => {
+                                const getCurrentLocation = async () => {
+                                    try {
+                                        setIsGettingLocation(true);
+                                        const { status } = await Location.requestForegroundPermissionsAsync();
+                                        if (status !== 'granted') {
+                                            Alert.alert(
+                                                'Permission Denied',
+                                                'Please enable location services to use this feature.'
+                                            );
+                                            return;
+                                        }
+
+                                        const location = await Location.getCurrentPositionAsync({});
+                                        const [address] = await Location.reverseGeocodeAsync({
+                                            latitude: location.coords.latitude,
+                                            longitude: location.coords.longitude
+                                        });
+
+                                        if (address) {
+                                            const locationString = [
+                                                address.street,
+                                                address.city,
+                                                address.region,
+                                                address.postalCode
+                                            ].filter(Boolean).join(', ');
+                                            setFieldValue('location', locationString);
+                                        }
+                                    } catch (error) {
+                                        Alert.alert(
+                                            'Error',
+                                            'Failed to get your current location. Please try again or enter the location manually.'
+                                        );
+                                    } finally {
+                                        setIsGettingLocation(false);
+                                    }
+                                };
+
                                 const pickImageAsync = async () => {
                                     if (values.images.length >= 5) {
                                         alert('Maximum 5 images allowed');
@@ -279,7 +269,8 @@ const AddListingScreen = () => {
                                                         }
                                                         result = await ImagePicker.launchCameraAsync({
                                                             allowsEditing: true,
-                                                            quality: 1,
+                                                            quality: 0.5,
+                                                            exif: false,
                                                         });
                                                         if (!result.canceled) {
                                                             setFieldValue('images', [...values.images, result.assets[0].uri]);
@@ -291,7 +282,8 @@ const AddListingScreen = () => {
                                                     onPress: async () => {
                                                         result = await ImagePicker.launchImageLibraryAsync({
                                                             allowsEditing: true,
-                                                            quality: 1,
+                                                            quality: 0.5,
+                                                            exif: false,
                                                         });
                                                         if (!result.canceled) {
                                                             setFieldValue('images', [...values.images, result.assets[0].uri]);
@@ -308,7 +300,8 @@ const AddListingScreen = () => {
                                         // For lost items, only allow picking from gallery
                                         result = await ImagePicker.launchImageLibraryAsync({
                                             allowsEditing: true,
-                                            quality: 1,
+                                            quality: 0.5,
+                                            exif: false,
                                         });
                                         if (!result.canceled) {
                                             setFieldValue('images', [...values.images, result.assets[0].uri]);
@@ -494,54 +487,44 @@ const AddListingScreen = () => {
                                             <Text style={stylesAddListingScreen.label}>
                                                 {values.listingType === 'found' ? "Location Found" : "Last Known Location"}
                                             </Text>
-                                            {values.listingType === 'found' ? (
-                                                <TouchableOpacity
+                                            <View style={{ width: '100%', position: 'relative' }}>
+                                                <TextInput
                                                     style={[
-                                                        stylesAddListingScreen.input,
+                                                        stylesAddListingScreen.locationInput,
                                                         !values.location && stylesAddListingScreen.requiredInput
                                                     ]}
-                                                    onPress={async () => {
-                                                        const location = await getCurrentLocation();
-                                                        if (location) {
-                                                            setFieldValue('location', location);
-                                                        }
-                                                    }}
-                                                >
-                                                    <Text style={stylesAddListingScreen.inputText}>
-                                                        {values.location || 'Get Current Location *'}
-                                                    </Text>
-                                                    {values.location.length > 0 && (
-                                                        <TouchableOpacity
-                                                            style={{ position: 'absolute', right: 10, top: 8 }}
-                                                            onPress={() => setFieldValue('location', '')}
-                                                        >
-                                                            <Ionicons name="close-circle" size={20} color="#aaa" />
-                                                        </TouchableOpacity>
-                                                    )}
-                                                </TouchableOpacity>
-                                            ) : (
-                                                <View style={{ width: '100%', position: 'relative' }}>
-                                                    <TextInput
-                                                        style={[
-                                                            stylesAddListingScreen.input,
-                                                            !values.location && stylesAddListingScreen.requiredInput
-                                                        ]}
-                                                        placeholder="Enter location where you lost the item *"
-                                                        value={values.location}
-                                                        onChangeText={handleChange('location')}
-                                                        onBlur={handleBlur('location')}
-                                                        selectionColor="rgb(25, 153, 100)"
-                                                    />
-                                                    {values.location.length > 0 && (
-                                                        <TouchableOpacity
-                                                            style={{ position: 'absolute', right: 10, top: 8 }}
-                                                            onPress={() => setFieldValue('location', '')}
-                                                        >
-                                                            <Ionicons name="close-circle" size={20} color="#aaa" />
-                                                        </TouchableOpacity>
-                                                    )}
-                                                </View>
-                                            )}
+                                                    placeholder={values.listingType === 'found' ? 
+                                                        "Enter location where you found the item *" : 
+                                                        "Enter location where you lost the item *"}
+                                                    value={values.location}
+                                                    multiline={true}
+                                                    numberOfLines={3}
+                                                    onChangeText={handleChange('location')}
+                                                    onBlur={handleBlur('location')}
+                                                    selectionColor="rgb(25, 153, 100)"
+                                                />
+                                                {values.listingType === 'found' && (
+                                                    <TouchableOpacity
+                                                        style={stylesAddListingScreen.locationButton}
+                                                        onPress={getCurrentLocation}
+                                                        disabled={isGettingLocation}
+                                                    >
+                                                        {isGettingLocation ? (
+                                                            <ActivityIndicator size="small" color="#fff" />
+                                                        ) : (
+                                                            <Ionicons name="location" size={20} color="#fff" />
+                                                        )}
+                                                    </TouchableOpacity>
+                                                )}
+                                                {values.location.length > 0 && (
+                                                    <TouchableOpacity
+                                                        style={{ position: 'absolute', right: 10, top: 8 }}
+                                                        onPress={() => setFieldValue('location', '')}
+                                                    >
+                                                        <Ionicons name="close-circle" size={20} color="#aaa" />
+                                                    </TouchableOpacity>
+                                                )}
+                                            </View>
                                         </View>
 
                                         <View style={stylesAddListingScreen.formRow}>

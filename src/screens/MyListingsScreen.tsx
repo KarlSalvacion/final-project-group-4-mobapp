@@ -163,6 +163,7 @@ const MyListingsScreen = () => {
             >
                 <View style={stylesMyListingsScreen.headerContent}>
                     <Text style={stylesMyListingsScreen.headerTitle}>My Listings</Text>
+                    <Text style={stylesMyListingsScreen.listingCount}>({listings.length})</Text>
                 </View>
             </TouchableOpacity>
 
