@@ -120,7 +120,11 @@ const LoginPage: React.FC = () => {
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.formContainer}>
           <View style={styles.logoContainer}>
-            <Text style={styles.logoText}>LOKÉ</Text>
+            <Image
+              source={require('../../assets/login-logo.png')}
+              style={styles.loginLogo}>
+
+            </Image>
           </View>
           <Text style={styles.subtitle}>Sign in to continue</Text>
 

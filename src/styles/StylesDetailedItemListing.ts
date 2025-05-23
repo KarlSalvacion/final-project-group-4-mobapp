@@ -281,9 +281,9 @@ export const stylesDetailedItemListing = StyleSheet.create({
         height: 200,
     },
     claimStatusContainer: {
-        marginVertical: 10,
-        padding: 10,
-        backgroundColor: '#f5f5f5',
+        marginBottom: 10,
+        paddingVertical: 10,
+        backgroundColor: '#fff',
         borderRadius: 8,
     },
     claimStatusText: {

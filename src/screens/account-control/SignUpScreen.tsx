@@ -19,7 +19,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { signUpValidationSchema } from '../../validation/ValidationSchema';
-import { stylesSignUpScreen } from '../../styles/StylesSignUpScreen';
+import { stylesSignUpScreen } from '../../styles/components/StylesSignUpScreen';
 import { BACKEND_BASE_URL } from '../../config/apiConfig';
 
 

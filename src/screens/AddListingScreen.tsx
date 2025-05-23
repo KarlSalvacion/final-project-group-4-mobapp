@@ -500,6 +500,7 @@ const AddListingScreen = () => {
                                                     placeholder={values.listingType === 'found' ? 
                                                         "Enter location where you found the item *" : 
                                                         "Enter location where you lost the item *"}
+                                                    placeholderTextColor={"#999"}
                                                     value={values.location}
                                                     multiline={true}
                                                     numberOfLines={3}

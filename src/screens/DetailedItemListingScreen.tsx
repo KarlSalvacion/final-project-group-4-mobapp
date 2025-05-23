@@ -12,7 +12,9 @@ import { Listing, Claim } from '../types/index';
 import ImageCarousel from '../components/ImageCarousel';
 
 type RootStackParamList = {
+    Home: undefined;
     DetailedItemListing: { listingId: string };
+    MyClaims: undefined;
 };
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
@@ -190,6 +192,7 @@ const DetailedItemListingScreen = () => {
         }
 
         try {
+            setIsSubmitting(true);
             if (!token) {
                 throw new Error('No authentication token found');
             }
@@ -237,13 +240,22 @@ const DetailedItemListingScreen = () => {
                 throw new Error(responseData.message || 'Failed to submit claim');
             }
 
-            Alert.alert('Success', 'Claim submitted successfully');
-            setIsClaimModalVisible(false);
-            setClaimExplanation('');
-            setProofImages([]);
+            Alert.alert('Success', 'Claim submitted successfully', [
+                {
+                    text: 'OK',
+                    onPress: () => {
+                        setIsClaimModalVisible(false);
+                        setClaimExplanation('');
+                        setProofImages([]);
+                        navigation.goBack();
+                    }
+                }
+            ]);
         } catch (error) {
             console.error('Error submitting claim:', error);
             Alert.alert('Error', error instanceof Error ? error.message : 'Failed to submit claim');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -316,21 +328,17 @@ const DetailedItemListingScreen = () => {
                 throw new Error(responseData.message || 'Failed to submit found item');
             }
 
-            Alert.alert(
-                'Success',
-                'Thank you for reporting that you found this item. The owner will be notified.',
-                [
-                    {
-                        text: 'OK',
-                        onPress: () => {
-                            setIsFoundModalVisible(false);
-                            setFoundExplanation('');
-                            setFoundImages([]);
-                            navigation.goBack();
-                        }
+            Alert.alert('Success', 'Thank you for reporting that you found this item.', [
+                {
+                    text: 'OK',
+                    onPress: () => {
+                        setIsFoundModalVisible(false);
+                        setFoundExplanation('');
+                        setFoundImages([]);
+                        navigation.goBack();
                     }
-                ]
-            );
+                }
+            ]);
         } catch (error) {
             console.error('Error submitting found item:', error);
             Alert.alert('Error', error instanceof Error ? error.message : 'Failed to submit found item');
@@ -543,7 +551,14 @@ const DetailedItemListingScreen = () => {
                                 throw new Error(errorData.message || 'Failed to delete claim');
                             }
                             setUserClaims(userClaims.filter(c => c._id !== claimId));
-                            Alert.alert('Success', 'Your claim has been deleted.');
+                            Alert.alert('Success', 'Your claim has been deleted.', [
+                                {
+                                    text: 'OK',
+                                    onPress: () => {
+                                        navigation.goBack();
+                                    }
+                                }
+                            ]);
                         } catch (error) {
                             Alert.alert('Error', error instanceof Error ? error.message : 'Failed to delete claim');
                         }
@@ -607,15 +622,6 @@ const DetailedItemListingScreen = () => {
                                         <Text style={stylesDetailedItemListing.notesText}>{existingClaim.notes}</Text>
                                     </View>
                                 )}
-                                {/* Show delete button for pending claims owned by the user */}
-                                {existingClaim.status === 'pending' && user && ((existingClaim.userId?._id || existingClaim.userId) === (user._id || user.id)) && (
-                                    <TouchableOpacity
-                                        style={[stylesDetailedItemListing.claimButton, { backgroundColor: '#e74c3c', marginTop: 10 }]}
-                                        onPress={() => handleDeleteClaim(existingClaim._id)}
-                                    >
-                                        <Text style={stylesDetailedItemListing.claimButtonText}>Delete Claim</Text>
-                                    </TouchableOpacity>
-                                )}
                             </View>
                         )}
 
@@ -641,43 +647,55 @@ const DetailedItemListingScreen = () => {
                         </View>
 
                         {!isUserOwner() && (
-                            listing.type === 'found' ? (
-                                <TouchableOpacity
-                                    style={[
-                                        stylesDetailedItemListing.claimButton,
-                                        isClaimDisabled && stylesDetailedItemListing.claimButtonDisabled
-                                    ]}
-                                    onPress={() => handleSubmit(false)}
-                                    disabled={isClaimDisabled}
-                                >
-                                    {isLoadingClaims ? (
-                                        <ActivityIndicator color="#fff" />
-                                    ) : (
-                                        <Text style={stylesDetailedItemListing.claimButtonText}>
-                                            {existingClaim ? getClaimStatusText(existingClaim.status) : 
-                                             hasExistingClaim ? 'Claim Pending' : 'Claim This Item'}
-                                        </Text>
-                                    )}
-                                </TouchableOpacity>
-                            ) : (
-                                <TouchableOpacity
-                                    style={[
-                                        stylesDetailedItemListing.claimButton,
-                                        isClaimDisabled && stylesDetailedItemListing.claimButtonDisabled
-                                    ]}
-                                    onPress={() => handleSubmit(true)}
-                                    disabled={isClaimDisabled}
-                                >
-                                    {isLoadingClaims ? (
-                                        <ActivityIndicator color="#fff" />
-                                    ) : (
-                                        <Text style={stylesDetailedItemListing.claimButtonText}>
-                                            {existingClaim ? getClaimStatusText(existingClaim.status) :
-                                             hasExistingClaim ? 'Found Pending' : 'I Found This Item'}
-                                        </Text>
-                                    )}
-                                </TouchableOpacity>
-                            )
+                            <View>
+                                {listing.type === 'found' ? (
+                                    <TouchableOpacity
+                                        style={[
+                                            stylesDetailedItemListing.claimButton,
+                                            isClaimDisabled && stylesDetailedItemListing.claimButtonDisabled
+                                        ]}
+                                        onPress={() => handleSubmit(false)}
+                                        disabled={isClaimDisabled}
+                                    >
+                                        {isLoadingClaims ? (
+                                            <ActivityIndicator color="#fff" />
+                                        ) : (
+                                            <Text style={stylesDetailedItemListing.claimButtonText}>
+                                                {existingClaim ? getClaimStatusText(existingClaim.status) : 
+                                                 hasExistingClaim ? 'Claim Pending' : 'Claim This Item'}
+                                            </Text>
+                                        )}
+                                    </TouchableOpacity>
+                                ) : (
+                                    <TouchableOpacity
+                                        style={[
+                                            stylesDetailedItemListing.claimButton,
+                                            isClaimDisabled && stylesDetailedItemListing.claimButtonDisabled
+                                        ]}
+                                        onPress={() => handleSubmit(true)}
+                                        disabled={isClaimDisabled}
+                                    >
+                                        {isLoadingClaims ? (
+                                            <ActivityIndicator color="#fff" />
+                                        ) : (
+                                            <Text style={stylesDetailedItemListing.claimButtonText}>
+                                                {existingClaim ? getClaimStatusText(existingClaim.status) :
+                                                 hasExistingClaim ? 'Found Pending' : 'I Found This Item'}
+                                            </Text>
+                                        )}
+                                    </TouchableOpacity>
+                                )}
+
+                                {/* Show delete button for pending claims owned by the user */}
+                                {existingClaim?.status === 'pending' && user && ((existingClaim.userId?._id || existingClaim.userId) === (user._id || user.id)) && (
+                                    <TouchableOpacity
+                                        style={[stylesDetailedItemListing.claimButton, { backgroundColor: '#e74c3c', marginTop: 10 }]}
+                                        onPress={() => handleDeleteClaim(existingClaim._id)}
+                                    >
+                                        <Text style={stylesDetailedItemListing.claimButtonText}>Delete Claim</Text>
+                                    </TouchableOpacity>
+                                )}
+                            </View>
                         )}
 
                         {isUserOwner() && (
@@ -750,7 +768,7 @@ const DetailedItemListingScreen = () => {
 
                                             <View style={stylesDetailedItemListing.imageUploadContainer}>
                                                 <Text style={stylesDetailedItemListing.imageUploadTitle}>
-                                                    Proof Images {listing.type === 'lost' && '(Optional)'}
+                                                    Proof Images {listing.type === 'lost' && '(Required)'}
                                                 </Text>
                                                 <TouchableOpacity
                                                     style={stylesDetailedItemListing.imageUploadButton}
@@ -795,12 +813,19 @@ const DetailedItemListingScreen = () => {
                                                 </TouchableOpacity>
 
                                                 <TouchableOpacity
-                                                    style={[stylesDetailedItemListing.modalButton, stylesDetailedItemListing.submitButton]}
+                                                    style={[
+                                                        stylesDetailedItemListing.modalButton, 
+                                                        stylesDetailedItemListing.submitButton,
+                                                        isSubmitting && { opacity: 0.7 }
+                                                    ]}
                                                     onPress={handleClaim}
                                                     disabled={isSubmitting}
                                                 >
                                                     {isSubmitting ? (
-                                                        <ActivityIndicator color="#fff" />
+                                                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                                                            <ActivityIndicator size="small" color="#fff" style={{ marginRight: 8 }} />
+                                                            <Text style={stylesDetailedItemListing.modalButtonText}>Submitting...</Text>
+                                                        </View>
                                                     ) : (
                                                         <Text style={stylesDetailedItemListing.modalButtonText}>Submit Claim</Text>
                                                     )}
@@ -860,7 +885,7 @@ const DetailedItemListingScreen = () => {
 
                                             <View style={stylesDetailedItemListing.imageUploadContainer}>
                                                 <Text style={stylesDetailedItemListing.imageUploadTitle}>
-                                                    Images (Optional)
+                                                    Images (Required)
                                                 </Text>
                                                 <TouchableOpacity
                                                     style={stylesDetailedItemListing.imageUploadButton}

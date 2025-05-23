@@ -28,7 +28,7 @@ export const stylesSignUpScreen = StyleSheet.create({
     headerTitle: {
         fontSize: 20,
         fontWeight: 'bold',
-        color: '#333',
+        color: 'rgb(25, 153, 100)',
     },
     formContainer: {
         flex: 1,
@@ -83,7 +83,7 @@ export const stylesSignUpScreen = StyleSheet.create({
     },
     submitButton: {
         height: 50,
-        backgroundColor: '#007AFF',
+        backgroundColor: 'rgb(25, 153, 100)',
         borderRadius: 8,
         alignItems: 'center',
         justifyContent: 'center',
@@ -99,10 +99,10 @@ export const stylesSignUpScreen = StyleSheet.create({
     },
     loginLink: {
         alignItems: 'center',
-        marginTop: 20,
+        marginTop: 0,
     },
     loginLinkText: {
-        color: '#007AFF',
+        color: 'rgb(25, 153, 100)',
         fontSize: 16,
     },
     domainText: {

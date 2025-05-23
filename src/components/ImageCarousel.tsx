@@ -105,14 +105,14 @@ const styles = StyleSheet.create({
         width: 8,
         height: 8,
         borderRadius: 4,
-        backgroundColor: 'rgba(0, 0, 0, 0.4)',
+        backgroundColor: 'rgba(79, 79, 79, 0.2)',
         marginHorizontal: 4,
     },
     paginationDotActive: {
         width: 10,
         height: 10,
         borderRadius: 5,
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        backgroundColor: 'rgba(124, 124, 124, 0.46)',
     },
     countIndicator: {
         position: 'absolute',
