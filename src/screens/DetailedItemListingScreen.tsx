@@ -239,14 +239,14 @@ const DetailedItemListingScreen = () => {
             const formData = new FormData();
             formData.append('listingId', listing._id);
             formData.append('description', foundExplanation);
-            formData.append('type', 'found'); // Add type to distinguish from claims
+            formData.append('type', 'found');
 
             foundImages.forEach((uri, index) => {
                 const filename = uri.split('/').pop();
                 const match = /\.(\w+)$/.exec(filename || '');
                 const type = match ? `image/${match[1]}` : 'image/jpeg';
                 
-                formData.append('proofImages', {
+                formData.append('images', {
                     uri,
                     name: filename,
                     type,
@@ -286,6 +286,7 @@ const DetailedItemListingScreen = () => {
                 ]
             );
         } catch (error) {
+            console.error('Error submitting found item:', error);
             Alert.alert(
                 'Error',
                 error instanceof Error ? error.message : 'Failed to submit found item. Please try again.'

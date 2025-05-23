@@ -41,7 +41,8 @@
     "use-isomorphic-layout-effect": "^1.2.0",
     "uuid": "^11.1.0",
     "yup": "^1.6.1",
-    "react-native-maps": "1.20.1"
+    "react-native-maps": "1.20.1",
+    "expo-notifications": "~0.31.2"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

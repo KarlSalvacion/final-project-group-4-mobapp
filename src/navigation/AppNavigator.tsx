@@ -8,6 +8,8 @@ import AdminNavigationBar from '../adminNavigation/AdminNavigationBar';
 import DetailedItemListingScreen from '../screens/DetailedItemListingScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import LoadingScreen from '../components/LoadingScreen';
+import MyClaimsScreen from '../screens/MyClaimsScreen';
+import AddListingScreen from '../screens/AddListingScreen';
 
 const Stack = createStackNavigator();
 
@@ -38,6 +40,8 @@ const AppNavigator = () => {
                         <Stack.Screen name="MainTabs" component={NavigationBar} />
                         <Stack.Screen name="DetailedItemListing" component={DetailedItemListingScreen} />
                         <Stack.Screen name="Profile" component={ProfileScreen} />
+                        <Stack.Screen name="MyClaims" component={MyClaimsScreen} />
+                        <Stack.Screen name="AddListing" component={AddListingScreen} />
                     </>
                 )}
             </Stack.Navigator>

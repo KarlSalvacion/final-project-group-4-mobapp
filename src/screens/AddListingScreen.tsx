@@ -48,7 +48,7 @@ const CATEGORIES = [
 const AddListingScreen = () => {
     const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
     const { addListing } = useListings();
-    const { token } = useAuth();
+    const { token, user } = useAuth();
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [showTimePicker, setShowTimePicker] = useState(false);
     const [showCategoryPicker, setShowCategoryPicker] = useState(false);
@@ -57,6 +57,7 @@ const AddListingScreen = () => {
     const [tempTime, setTempTime] = useState<Date>(new Date());
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isGettingLocation, setIsGettingLocation] = useState(false);
+    const [showNotification, setShowNotification] = useState(false);
     const formRef = useRef<any>(null);
 
     const handleSubmit = async (values: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
@@ -102,6 +103,9 @@ const AddListingScreen = () => {
             
             // Update the listings in context with the response from the server
             await addListing(newListing);
+
+            // Show notification
+            setShowNotification(true);
 
             // Reset the form
             resetForm();

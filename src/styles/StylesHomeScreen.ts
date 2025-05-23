@@ -111,4 +111,12 @@ export const stylesHomeScreen = StyleSheet.create({
         fontSize: 16,
         fontWeight: '500',
     },
+    headerButtons: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 15,
+    },
+    headerButton: {
+        padding: 5,
+    },
 });
