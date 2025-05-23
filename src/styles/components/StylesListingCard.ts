@@ -75,6 +75,11 @@ export const stylesListingCard = StyleSheet.create({
         backgroundColor: 'rgba(255, 59, 48, 0.1)',
         color: 'rgb(255, 59, 48)',
     },
+    categoryText: {
+        fontSize: 14,
+        color: '#666',
+        fontStyle: 'italic',
+    },
     locationText: {
         fontSize: 14,
         color: '#666',

@@ -9,6 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import { BACKEND_BASE_URL } from '../config/apiConfig';
 import * as ImagePicker from 'expo-image-picker';
 import { Listing, Claim } from '../types';
+import ImageCarousel from '../components/ImageCarousel';
 
 type RootStackParamList = {
     DetailedItemListing: { listingId: string };
@@ -415,26 +416,6 @@ const DetailedItemListingScreen = () => {
         }
     }, [isEditModalVisible, listing]);
 
-    const renderImage = ({ item }: { item: string }) => (
-        <View style={[stylesDetailedItemListing.carouselItem, { width: screenWidth }]}>
-            <Image 
-                source={{ uri: item }}
-                style={stylesDetailedItemListing.carouselImage}
-                resizeMode="cover"
-            />
-        </View>
-    );
-
-    const onViewableItemsChanged = useRef(({ viewableItems }: any) => {
-        if (viewableItems.length > 0) {
-            setActiveSlide(viewableItems[0].index);
-        }
-    }).current;
-
-    const viewabilityConfig = useRef({
-        itemVisiblePercentThreshold: 50
-    }).current;
-
     if (!listing) {
         return (
             <View style={stylesDetailedItemListing.mainContainer}>
@@ -459,27 +440,7 @@ const DetailedItemListingScreen = () => {
                 <ScrollView style={stylesDetailedItemListing.scrollContainer}>
                     {listing.images.length > 0 && (
                         <View style={stylesDetailedItemListing.imageContainer}>
-                            <FlatList
-                                data={listing.images}
-                                renderItem={renderImage}
-                                horizontal
-                                pagingEnabled
-                                showsHorizontalScrollIndicator={false}
-                                onViewableItemsChanged={onViewableItemsChanged}
-                                viewabilityConfig={viewabilityConfig}
-                                keyExtractor={(item, index) => index.toString()}
-                            />
-                            <View style={stylesDetailedItemListing.paginationContainer}>
-                                {listing.images.map((_, index) => (
-                                    <View
-                                        key={index}
-                                        style={[
-                                            stylesDetailedItemListing.paginationDot,
-                                            index === activeSlide && stylesDetailedItemListing.paginationDotActive
-                                        ]}
-                                    />
-                                ))}
-                            </View>
+                            <ImageCarousel images={listing.images} />
                         </View>
                     )}
                     
@@ -514,48 +475,42 @@ const DetailedItemListingScreen = () => {
                             </Text>
                         </View>
 
-                        {listing.type === 'found' ? (
-                            <TouchableOpacity
-                                style={[
-                                    stylesDetailedItemListing.claimButton,
-                                    (hasExistingClaim || isLoadingClaims || isUserOwner()) && stylesDetailedItemListing.claimButtonDisabled
-                                ]}
-                                onPress={() => handleSubmit(false)}
-                                disabled={hasExistingClaim || isLoadingClaims || isUserOwner()}
-                            >
-                                {isLoadingClaims ? (
-                                    <ActivityIndicator color="#fff" />
-                                ) : (
-                                    <Text style={stylesDetailedItemListing.claimButtonText}>
-                                        {isUserOwner() 
-                                            ? 'Cannot Claim Own Item' 
-                                            : hasExistingClaim 
-                                                ? 'Claim Pending' 
-                                                : 'Claim This Item'}
-                                    </Text>
-                                )}
-                            </TouchableOpacity>
-                        ) : (
-                            <TouchableOpacity
-                                style={[
-                                    stylesDetailedItemListing.claimButton,
-                                    (hasExistingClaim || isLoadingClaims || isUserOwner()) && stylesDetailedItemListing.claimButtonDisabled
-                                ]}
-                                onPress={() => handleSubmit(true)}
-                                disabled={hasExistingClaim || isLoadingClaims || isUserOwner()}
-                            >
-                                {isLoadingClaims ? (
-                                    <ActivityIndicator color="#fff" />
-                                ) : (
-                                    <Text style={stylesDetailedItemListing.claimButtonText}>
-                                        {isUserOwner() 
-                                            ? 'Cannot Report Own Item' 
-                                            : hasExistingClaim 
-                                                ? 'Found Pending' 
-                                                : 'I Found This Item'}
-                                    </Text>
-                                )}
-                            </TouchableOpacity>
+                        {!isUserOwner() && (
+                            listing.type === 'found' ? (
+                                <TouchableOpacity
+                                    style={[
+                                        stylesDetailedItemListing.claimButton,
+                                        (hasExistingClaim || isLoadingClaims) && stylesDetailedItemListing.claimButtonDisabled
+                                    ]}
+                                    onPress={() => handleSubmit(false)}
+                                    disabled={hasExistingClaim || isLoadingClaims}
+                                >
+                                    {isLoadingClaims ? (
+                                        <ActivityIndicator color="#fff" />
+                                    ) : (
+                                        <Text style={stylesDetailedItemListing.claimButtonText}>
+                                            {hasExistingClaim ? 'Claim Pending' : 'Claim This Item'}
+                                        </Text>
+                                    )}
+                                </TouchableOpacity>
+                            ) : (
+                                <TouchableOpacity
+                                    style={[
+                                        stylesDetailedItemListing.claimButton,
+                                        (hasExistingClaim || isLoadingClaims) && stylesDetailedItemListing.claimButtonDisabled
+                                    ]}
+                                    onPress={() => handleSubmit(true)}
+                                    disabled={hasExistingClaim || isLoadingClaims}
+                                >
+                                    {isLoadingClaims ? (
+                                        <ActivityIndicator color="#fff" />
+                                    ) : (
+                                        <Text style={stylesDetailedItemListing.claimButtonText}>
+                                            {hasExistingClaim ? 'Found Pending' : 'I Found This Item'}
+                                        </Text>
+                                    )}
+                                </TouchableOpacity>
+                            )
                         )}
 
                         {isUserOwner() && (
@@ -609,8 +564,11 @@ const DetailedItemListingScreen = () => {
                                                 multiline
                                                 numberOfLines={6}
                                                 placeholder="Explain why this item belongs to you..."
+                                                placeholderTextColor={'#999'}
+                                                autoCapitalize="sentences"
                                                 value={claimExplanation}
                                                 onChangeText={setClaimExplanation}
+                                                selectionColor={'rgba(25, 153, 100, 1)'}
                                             />
 
                                             <View style={stylesDetailedItemListing.imageUploadContainer}>

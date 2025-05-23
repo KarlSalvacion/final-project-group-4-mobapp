@@ -10,23 +10,51 @@ export const stylesAddListingScreen = StyleSheet.create({
         height: 50,
         width: '100%',
         alignItems: 'center',
-        justifyContent: 'flex-start',
+        justifyContent: 'space-between',
         flexDirection: 'row',
         backgroundColor: 'rgb(25, 153, 100)',
         paddingHorizontal: 20,
         gap: 10,
     },
+
+    headerContent: {
+        flexDirection: 'row',
+        justifyContent: 'flex-start',
+        alignItems: 'center',
+        gap: 15,
+    },
+
     headerTitle: {
         fontSize: 20,
         fontWeight: 'bold',
         color: '#fff',
     },
+
     backButton: {
         gap: 10,
     },
+
     backButtonIcon: {
         color: '#fff',
         fontSize: 24,
+    },
+
+    resetButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: '#fff',
+        borderRadius: 16,
+        paddingVertical: 5,
+        paddingHorizontal: 10,
+        backgroundColor: '#fff',
+    },
+
+    resetButtonText: {
+        color: 'rgb(25, 153, 100)',
+        fontSize: 16,
+        fontWeight: 'bold',
     },
 
     contentContainer: {
@@ -141,6 +169,7 @@ export const stylesAddListingScreen = StyleSheet.create({
     pickerButtonContainer: {
         flexDirection: 'row',
         gap: 10,
+        
     },
 
     pickerButton: {
@@ -168,6 +197,7 @@ export const stylesAddListingScreen = StyleSheet.create({
         width: '100%',
         height: 200,
         backgroundColor: '#fff',
+        
     },
 
     imageInput: {
@@ -196,10 +226,10 @@ export const stylesAddListingScreen = StyleSheet.create({
 
     submitButton: {
         width: '100%',
-        height: 40,
+        height: 50,
         backgroundColor: 'rgb(25, 153, 100)',
         borderRadius: 5,
-        marginTop: 20,
+        marginTop: 0,
         alignItems: 'center',
         justifyContent: 'center',
     },

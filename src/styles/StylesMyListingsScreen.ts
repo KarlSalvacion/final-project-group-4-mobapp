@@ -50,6 +50,13 @@ const stylesMyListingsScreen = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 10,
     },
+
+    listingImage: {
+        width: 100,
+        height: 100,
+        borderRadius: 10,
+        backgroundColor: '#e0e0e0',
+    },
     listingTitle: {
         fontSize: 18,
         fontWeight: '600',

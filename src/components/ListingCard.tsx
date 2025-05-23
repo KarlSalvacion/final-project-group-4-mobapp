@@ -48,6 +48,12 @@ const ListingCard = ({ listing, onPress }: ListingCardProps) => {
                     {listing.description}
                 </Text>
                 <View style={stylesListingCard.detailsContainer}>
+                    <Ionicons name="pricetag" style={stylesListingCard.icon} />
+                    <Text style={stylesListingCard.categoryText}>
+                        {listing.category.charAt(0).toUpperCase() + listing.category.slice(1)}
+                    </Text>
+                </View>
+                <View style={stylesListingCard.detailsContainer}>
                     <Ionicons name="person-outline" style={stylesListingCard.icon} />
                     <Text style={stylesListingCard.userText}>
                         {listing.userId?.name || 'Anonymous'}

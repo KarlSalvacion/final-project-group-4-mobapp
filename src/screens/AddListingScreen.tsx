@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, TextInput, Image, ScrollView, TouchableWithoutFeedback, Keyboard, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { stylesAddListingScreen } from '../styles/StylesAddListingScreen';
@@ -56,7 +56,7 @@ const AddListingScreen = () => {
     const [locationPermission, setLocationPermission] = useState<boolean | null>(null);
     const [tempDate, setTempDate] = useState<Date>(new Date());
     const [tempTime, setTempTime] = useState<Date>(new Date());
-    const [formRef, setFormRef] = useState<any>(null);
+    const formRef = useRef<any>(null);
 
     useEffect(() => {
         (async () => {
@@ -186,6 +186,23 @@ const AddListingScreen = () => {
         return `${hours}:${minutes}`;
     };
     
+    const handleReset = () => {
+        Alert.alert(
+            "Reset Form",
+            "Are you sure you want to reset all fields?",
+            [
+                {
+                    text: "Cancel",
+                    style: "cancel"
+                },
+                {
+                    text: "Reset",
+                    onPress: () => formRef.current?.resetForm(),
+                    style: "destructive"
+                }
+            ]
+        );
+    };
 
     return (
         <KeyboardAvoidingView
@@ -194,24 +211,33 @@ const AddListingScreen = () => {
             keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
         >
             <View style={stylesAddListingScreen.headerContainer}>
-                <TouchableOpacity 
-                    style={stylesAddListingScreen.backButton}
-                    onPress={() => navigation.goBack()}
+                <View style={stylesAddListingScreen.headerContent}>
+                    <TouchableOpacity 
+                        style={stylesAddListingScreen.backButton}
+                        onPress={() => navigation.goBack()}
+                    >
+                        <Ionicons name="arrow-back" style={stylesAddListingScreen.backButtonIcon}/>
+                    </TouchableOpacity>
+                    <Text style={stylesAddListingScreen.headerTitle}>Add Listing</Text>
+                </View>
+                <TouchableOpacity
+                    style={stylesAddListingScreen.resetButton}
+                    onPress={handleReset}
                 >
-                    <Ionicons name="arrow-back" style={stylesAddListingScreen.backButtonIcon}/>
+                    <Text style={stylesAddListingScreen.resetButtonText}>Reset</Text>
                 </TouchableOpacity>
-                <Text style={stylesAddListingScreen.headerTitle}>Add Listing</Text>
             </View>
 
             <ScrollView 
                 style={stylesAddListingScreen.scrollContainer}
-                showsVerticalScrollIndicator={true}
+                showsVerticalScrollIndicator={false}
                 contentContainerStyle={{ paddingBottom: 100 }}
                 keyboardShouldPersistTaps="handled"
             >
                 <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                     <View style={stylesAddListingScreen.formContainer}>
                         <Formik<FormValues>
+                            innerRef={formRef}
                             initialValues={{
                                 listingType: 'lost' as ListingType,
                                 title: '',
@@ -338,25 +364,47 @@ const AddListingScreen = () => {
 
                                         <View style={stylesAddListingScreen.formRow}>
                                             <Text style={stylesAddListingScreen.label}>Name</Text>
-                                            <TextInput
-                                                style={stylesAddListingScreen.input}
-                                                placeholder="Name"
-                                                value={values.title}
-                                                onChangeText={handleChange('title')}
-                                                onBlur={handleBlur('title')}
-                                            />
+                                            <View style={{ width: '100%', position: 'relative' }}>
+                                                <TextInput
+                                                    style={stylesAddListingScreen.input}
+                                                    placeholder="Name"
+                                                    value={values.title}
+                                                    onChangeText={handleChange('title')}
+                                                    onBlur={handleBlur('title')}
+                                                    selectionColor="rgb(25, 153, 100)"
+                                                />
+                                                {values.title.length > 0 && (
+                                                    <TouchableOpacity
+                                                        style={{ position: 'absolute', right: 10, top: 8 }}
+                                                        onPress={() => setFieldValue('title', '')}
+                                                    >
+                                                        <Ionicons name="close-circle" size={20} color="#aaa" />
+                                                    </TouchableOpacity>
+                                                )}
+                                            </View>
                                         </View>
                                         <View style={stylesAddListingScreen.formRow}>
                                             <Text style={stylesAddListingScreen.label}>Description</Text>
-                                            <TextInput
-                                                style={[stylesAddListingScreen.input, stylesAddListingScreen.descriptionInput]}
-                                                multiline={true}
-                                                numberOfLines={6}
-                                                placeholder="Description"
-                                                value={values.description}
-                                                onChangeText={handleChange('description')}
-                                                onBlur={handleBlur('description')}
-                                            />
+                                            <View style={{ width: '100%', position: 'relative' }}>
+                                                <TextInput
+                                                    style={[stylesAddListingScreen.input, stylesAddListingScreen.descriptionInput]}
+                                                    multiline={true}
+                                                    numberOfLines={6}
+                                                    placeholder="Description"
+                                                    value={values.description}
+                                                    onChangeText={handleChange('description')}
+                                                    onBlur={handleBlur('description')}
+                                                    selectionColor="rgb(25, 153, 100)"
+                                                />
+                                                {values.description.length > 0 && (
+                                                    <TouchableOpacity
+                                                        style={{ position: 'absolute', right: 10, top: 8 }}
+                                                        onPress={() => setFieldValue('description', '')}
+                                                    >
+                                                        <Ionicons name="close-circle" size={20} color="#aaa" />
+                                                    </TouchableOpacity>
+                                                )}
+                                            </View>
                                         </View>
 
                                         <View style={stylesAddListingScreen.formRow}>
@@ -456,18 +504,37 @@ const AddListingScreen = () => {
                                                     <Text style={stylesAddListingScreen.inputText}>
                                                         {values.location || 'Get Current Location *'}
                                                     </Text>
+                                                    {values.location.length > 0 && (
+                                                        <TouchableOpacity
+                                                            style={{ position: 'absolute', right: 10, top: 8 }}
+                                                            onPress={() => setFieldValue('location', '')}
+                                                        >
+                                                            <Ionicons name="close-circle" size={20} color="#aaa" />
+                                                        </TouchableOpacity>
+                                                    )}
                                                 </TouchableOpacity>
                                             ) : (
-                                                <TextInput
-                                                    style={[
-                                                        stylesAddListingScreen.input,
-                                                        !values.location && stylesAddListingScreen.requiredInput
-                                                    ]}
-                                                    placeholder="Enter location where you lost the item *"
-                                                    value={values.location}
-                                                    onChangeText={handleChange('location')}
-                                                    onBlur={handleBlur('location')}
-                                                />
+                                                <View style={{ width: '100%', position: 'relative' }}>
+                                                    <TextInput
+                                                        style={[
+                                                            stylesAddListingScreen.input,
+                                                            !values.location && stylesAddListingScreen.requiredInput
+                                                        ]}
+                                                        placeholder="Enter location where you lost the item *"
+                                                        value={values.location}
+                                                        onChangeText={handleChange('location')}
+                                                        onBlur={handleBlur('location')}
+                                                        selectionColor="rgb(25, 153, 100)"
+                                                    />
+                                                    {values.location.length > 0 && (
+                                                        <TouchableOpacity
+                                                            style={{ position: 'absolute', right: 10, top: 8 }}
+                                                            onPress={() => setFieldValue('location', '')}
+                                                        >
+                                                            <Ionicons name="close-circle" size={20} color="#aaa" />
+                                                        </TouchableOpacity>
+                                                    )}
+                                                </View>
                                             )}
                                         </View>
 

@@ -110,7 +110,7 @@ export const stylesDetailedItemListing = StyleSheet.create({
         borderRadius: 8,
         padding: 10,
         fontSize: 14,
-        minHeight: 40,
+        minHeight: 100,
         textAlignVertical: 'top',
         marginBottom: 10,
     },
@@ -141,7 +141,6 @@ export const stylesDetailedItemListing = StyleSheet.create({
         fontSize: 16,
         fontWeight: '500',
     },
-
     modalCancelButtonText: {
         color: 'rgb(25, 153, 100)',
         fontSize: 16,
@@ -250,36 +249,6 @@ export const stylesDetailedItemListing = StyleSheet.create({
         fontSize: 14,
         color: '#666',
         marginBottom: 10,
-    },
-    carouselItem: {
-        width: '100%',
-        height: 300,
-    },
-    carouselImage: {
-        width: '100%',
-        height: '100%',
-        resizeMode: 'cover',
-    },
-    paginationContainer: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        position: 'absolute',
-        bottom: 10,
-        width: '100%',
-    },
-    paginationDot: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-        backgroundColor: 'rgba(0, 0, 0, 0.4)',
-        marginHorizontal: 4,
-    },
-    paginationDotActive: {
-        width: 10,
-        height: 10,
-        borderRadius: 5,
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
     },
 });
 

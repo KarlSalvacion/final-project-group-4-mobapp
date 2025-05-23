@@ -15,6 +15,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import stylesMyListingsScreen from '../styles/StylesMyListingsScreen';
 import { BACKEND_BASE_URL } from '../config/apiConfig';
+import ListingCard from '../components/ListingCard';
 
 type RootStackParamList = {
     Home: undefined;
@@ -158,6 +159,7 @@ const MyListingsScreen = () => {
 
             <ScrollView 
                 style={stylesMyListingsScreen.scrollView}
+                showsVerticalScrollIndicator={false}
                 contentContainerStyle={stylesMyListingsScreen.contentContainer}
                 refreshControl={
                     <RefreshControl
@@ -168,8 +170,6 @@ const MyListingsScreen = () => {
                     />
                 }
             >
-                <Text style={stylesMyListingsScreen.sectionTitle}>My Listings</Text>
-
                 {listings.length === 0 ? (
                     <View style={stylesMyListingsScreen.emptyContainer}>
                         <Ionicons name="document-text-outline" size={50} color="#666" />
@@ -179,63 +179,11 @@ const MyListingsScreen = () => {
                     </View>
                 ) : (
                     listings.map((listing) => (
-                        <TouchableOpacity
+                        <ListingCard
                             key={listing._id}
-                            style={stylesMyListingsScreen.listingCard}
+                            listing={listing as any}
                             onPress={() => handleListingPress(listing._id)}
-                        >
-                            <View style={stylesMyListingsScreen.listingHeader}>
-                                <Text style={stylesMyListingsScreen.listingTitle} numberOfLines={1}>
-                                    {listing.title}
-                                </Text>
-                                <Text style={[
-                                    stylesMyListingsScreen.listingStatus,
-                                    listing.type === 'found' 
-                                        ? stylesMyListingsScreen.statusFound 
-                                        : stylesMyListingsScreen.statusLost
-                                ]}>
-                                    {listing.type.toUpperCase()}
-                                </Text>
-                            </View>
-
-                            <View style={stylesMyListingsScreen.listingDetails}>
-                                <View style={stylesMyListingsScreen.detailRow}>
-                                    <Ionicons 
-                                        name="calendar-outline" 
-                                        size={20} 
-                                        color="#666"
-                                        style={stylesMyListingsScreen.detailIcon}
-                                    />
-                                    <Text style={stylesMyListingsScreen.detailText}>
-                                        {formatDate(listing.date)}
-                                    </Text>
-                                </View>
-
-                                <View style={stylesMyListingsScreen.detailRow}>
-                                    <Ionicons 
-                                        name="location-outline" 
-                                        size={20} 
-                                        color="#666"
-                                        style={stylesMyListingsScreen.detailIcon}
-                                    />
-                                    <Text style={stylesMyListingsScreen.detailText} numberOfLines={1}>
-                                        {listing.location}
-                                    </Text>
-                                </View>
-
-                                <View style={stylesMyListingsScreen.detailRow}>
-                                    <Ionicons 
-                                        name="pricetag-outline" 
-                                        size={20} 
-                                        color="#666"
-                                        style={stylesMyListingsScreen.detailIcon}
-                                    />
-                                    <Text style={stylesMyListingsScreen.detailText}>
-                                        {listing.category}
-                                    </Text>
-                                </View>
-                            </View>
-                        </TouchableOpacity>
+                        />
                     ))
                 )}
             </ScrollView>
