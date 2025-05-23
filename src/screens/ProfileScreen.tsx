@@ -88,9 +88,6 @@ const ProfileScreen = () => {
                                     'Content-Type': 'application/json',
                                     'Authorization': `Bearer ${token}`,
                                 },
-                                body: JSON.stringify({
-                                    email: user?.email,
-                                }),
                             });
 
                             if (!response.ok) {

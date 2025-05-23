@@ -3,6 +3,8 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const authConfig = require('../config/auth');
+const Listing = require('../models/Listing');
+const Claim = require('../models/Claim');
 
 // Debug route to check token
 router.get('/check-token', async (req, res) => {
@@ -150,6 +152,35 @@ router.post('/login', async (req, res) => {
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
+});
+
+// Delete user account
+router.delete('/delete-account', async (req, res) => {
+    try {
+        if (!req.user || !req.user.userId) {
+            return res.status(401).json({ message: 'User not authenticated' });
+        }
+
+        // Find and delete the user
+        const user = await User.findById(req.user.userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Delete all user's listings
+        await Listing.deleteMany({ userId: req.user.userId });
+
+        // Delete all user's claims
+        await Claim.deleteMany({ userId: req.user.userId });
+
+        // Delete the user
+        await User.findByIdAndDelete(req.user.userId);
+
+        res.json({ message: 'Account deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting account:', error);
+        res.status(500).json({ message: 'Error deleting account', error: error.message });
+    }
 });
 
 module.exports = router; 

@@ -35,7 +35,14 @@ mongoose.connect(dbConfig.mongoURI, dbConfig.options)
   });
 
 // Routes
-app.use('/api/users', userRoutes);
+app.use('/api/users', (req, res, next) => {
+  // Skip authentication for login, register, and check-token routes
+  if (req.path === '/login' || req.path === '/register' || req.path === '/check-token') {
+    return next();
+  }
+  // Apply authentication middleware for all other routes
+  authenticateToken(req, res, next);
+}, userRoutes);
 app.use('/api/listings', authenticateToken, listingRoutes);
 app.use('/api/claims', authenticateToken, claimRoutes);
 app.use('/api/admin', authenticateToken, adminRoutes);
