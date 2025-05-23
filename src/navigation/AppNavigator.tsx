@@ -6,11 +6,20 @@ import AuthNavigator from './AuthNavigator';
 import { useAuth } from '../context/AuthContext';
 import AdminNavigationBar from '../adminNavigation/AdminNavigationBar';
 import DetailedItemListingScreen from '../screens/DetailedItemListingScreen';
+import ProfileScreen from '../screens/ProfileScreen';
+import LoadingScreen from '../components/LoadingScreen';
+import MyClaimsScreen from '../screens/MyClaimsScreen';
+import AddListingScreen from '../screens/AddListingScreen';
 
 const Stack = createStackNavigator();
 
 const AppNavigator = () => {
-    const { isAuthenticated, userType } = useAuth();
+    const { isAuthenticated, user, isLoading } = useAuth();
+
+    // Show loading screen while auth state is being determined
+    if (isLoading || (isAuthenticated && !user)) {
+        return <LoadingScreen />;
+    }
 
     return (
         <NavigationContainer>
@@ -20,14 +29,20 @@ const AppNavigator = () => {
                 {!isAuthenticated ? (
                     // Auth Stack
                     <Stack.Screen name="Auth" component={AuthNavigator} />
-                ) : userType === 'admin' ? (
+                ) : user?.role === 'admin' ? (
                     // Admin Stack
-                    <Stack.Screen name="AdminTabs" component={AdminNavigationBar} />
+                    <>
+                        <Stack.Screen name="AdminTabs" component={AdminNavigationBar} />
+                        <Stack.Screen name="Profile" component={ProfileScreen} />
+                    </>
                 ) : (
                     // User Stack
                     <>
                         <Stack.Screen name="MainTabs" component={NavigationBar} />
                         <Stack.Screen name="DetailedItemListing" component={DetailedItemListingScreen} />
+                        <Stack.Screen name="Profile" component={ProfileScreen} />
+                        <Stack.Screen name="MyClaims" component={MyClaimsScreen} />
+                        <Stack.Screen name="AddListing" component={AddListingScreen} />
                     </>
                 )}
             </Stack.Navigator>

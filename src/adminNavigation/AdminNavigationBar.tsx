@@ -4,7 +4,8 @@ import { Ionicons } from '@expo/vector-icons';
 import AdminDashboard from '../adminScreens/AdminDashboard';
 import AdminListingPage from '../adminScreens/AdminListingPage';
 import AdminTicketPage from '../adminScreens/AdminTicketPage';
-import { StyleSheet } from 'react-native';
+import AdminUserPage from '../adminScreens/AdminUserPage';
+import { StyleSheet, Platform } from 'react-native';
 
 const Tab = createBottomTabNavigator();
 
@@ -13,8 +14,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgb(25, 153, 100)',
     borderTopWidth: 0,
     elevation: 0,
-    height: 60,
-    paddingBottom: 10,
+    height: Platform.OS === 'android' ? 90 : 60,
+    paddingBottom: Platform.OS === 'android' ? 30 : 10,
   },
 });
 
@@ -30,10 +31,12 @@ export default function AdminNavigationBar() {
 
                     if (route.name === 'Dashboard') {
                         iconName = focused ? 'home' : 'home-outline';
-                    } else if (route.name === 'Listings') {
-                        iconName = focused ? 'list' : 'list-outline';
                     } else if (route.name === 'Tickets') {
                         iconName = focused ? 'ticket' : 'ticket-outline';
+                    } else if (route.name === 'Listings') {
+                        iconName = focused ? 'list' : 'list-outline';
+                    } else if (route.name === 'Users') {
+                        iconName = focused ? 'people' : 'people-outline';
                     } else {
                         iconName = 'alert-circle';
                     }
@@ -47,8 +50,9 @@ export default function AdminNavigationBar() {
             })}
         >
             <Tab.Screen name="Dashboard" component={AdminDashboard} />
-            <Tab.Screen name="Listings" component={AdminListingPage} />
             <Tab.Screen name="Tickets" component={AdminTicketPage} />
+            <Tab.Screen name="Listings" component={AdminListingPage} />
+            <Tab.Screen name="Users" component={AdminUserPage} />
         </Tab.Navigator>
     );
 }

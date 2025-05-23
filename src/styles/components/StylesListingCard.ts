@@ -26,14 +26,27 @@ export const stylesListingCard = StyleSheet.create({
         height: '100%',
         resizeMode: 'cover',
     },
+    placeholderImage: {
+        backgroundColor: '#f5f5f5',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
     contentContainer: {
         padding: 16,
         gap: 8,
+    },
+    titleContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 4,
     },
     title: {
         fontSize: 18,
         fontWeight: 'bold',
         color: '#333',
+        flex: 1,
+        marginRight: 8,
     },
     description: {
         fontSize: 14,
@@ -46,12 +59,27 @@ export const stylesListingCard = StyleSheet.create({
         gap: 8,
         marginTop: 4,
     },
-
     typeText: {
+        fontSize: 12,
+        fontWeight: 'bold',
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 6,
+        overflow: 'hidden',
+    },
+    typeFound: {
+        backgroundColor: 'rgba(25, 153, 100, 0.1)',
+        color: 'rgb(25, 153, 100)',
+    },
+    typeLost: {
+        backgroundColor: 'rgba(255, 59, 48, 0.1)',
+        color: 'rgb(255, 59, 48)',
+    },
+    categoryText: {
         fontSize: 14,
         color: '#666',
+        fontStyle: 'italic',
     },
-    
     locationText: {
         fontSize: 14,
         color: '#666',
@@ -60,6 +88,11 @@ export const stylesListingCard = StyleSheet.create({
     dateTimeText: {
         fontSize: 14,
         color: '#666',
+    },
+    userText: {
+        fontSize: 14,
+        color: '#666',
+        fontStyle: 'italic',
     },
     icon: {
         fontSize: 16,
