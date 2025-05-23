@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform, StatusBar } from 'react-native';
 
 const stylesMyListingsScreen = StyleSheet.create({
     mainContainer: {
@@ -7,12 +7,13 @@ const stylesMyListingsScreen = StyleSheet.create({
     },
     headerContainer: {
         flexDirection: 'row',
-        justifyContent: 'flex-start',
+        justifyContent: 'space-between',
         alignItems: 'center',
         height: 80,
         width: '100%',
         backgroundColor: 'rgb(25, 153, 100)',
         paddingHorizontal: 20,
+        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
     },
     
     headerContent: {

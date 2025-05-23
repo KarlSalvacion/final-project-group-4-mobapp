@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform, StatusBar } from 'react-native';
 
 const stylesMyClaimsScreen = StyleSheet.create({
     mainContainer: {
@@ -13,6 +13,7 @@ const stylesMyClaimsScreen = StyleSheet.create({
         width: '100%',
         backgroundColor: 'rgb(25, 153, 100)',
         paddingHorizontal: 20,
+        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
     },
     headerContent: {
         flexDirection: 'row',

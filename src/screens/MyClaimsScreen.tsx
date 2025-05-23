@@ -24,14 +24,16 @@ type NavigationProp = StackNavigationProp<RootStackParamList>;
 
 interface Claim {
     _id: string;
-    listingId: string;
-    listing: {
+    listingId: {
+        _id: string;
         title: string;
         description: string;
         type: 'lost' | 'found';
         images: string[];
     };
     status: 'pending' | 'approved' | 'rejected';
+    description: string;
+    proofImages: string[];
     createdAt: string;
     updatedAt: string;
 }
@@ -68,8 +70,7 @@ const MyClaimsScreen = () => {
             }
 
             const data = await response.json();
-            const validClaims = data.filter((claim: Claim) => claim.listing);
-            setClaims(validClaims);
+            setClaims(data);
         } catch (err) {
             console.error('Error fetching claims:', err);
             setError(err instanceof Error ? err.message : 'Failed to load your claims. Please try again later.');
@@ -119,18 +120,18 @@ const MyClaimsScreen = () => {
     };
 
     const renderClaimItem = ({ item }: { item: Claim }) => {
-        if (!item.listing) {
+        if (!item.listingId) {
             return null;
         }
 
         return (
             <TouchableOpacity
                 style={stylesMyClaimsScreen.claimCard}
-                onPress={() => handleClaimPress(item.listingId)}
+                onPress={() => handleClaimPress(item.listingId._id)}
             >
                 <View style={stylesMyClaimsScreen.claimHeader}>
                     <Text style={stylesMyClaimsScreen.claimTitle}>
-                        {item.listing.title || 'Untitled Item'}
+                        {item.listingId.title || 'Untitled Item'}
                     </Text>
                     <Text style={[
                         stylesMyClaimsScreen.claimStatus,
@@ -151,7 +152,7 @@ const MyClaimsScreen = () => {
                             Claimed on {formatDate(item.createdAt)}
                         </Text>
                     </View>
-                    {item.listing.description && (
+                    {item.description && (
                         <View style={stylesMyClaimsScreen.detailRow}>
                             <Ionicons 
                                 name="information-circle-outline" 
@@ -160,8 +161,8 @@ const MyClaimsScreen = () => {
                                 style={stylesMyClaimsScreen.detailIcon}
                             />
                             <Text style={stylesMyClaimsScreen.detailText}>
-                                {item.listing.description.substring(0, 100)}
-                                {item.listing.description.length > 100 ? '...' : ''}
+                                {item.description.substring(0, 100)}
+                                {item.description.length > 100 ? '...' : ''}
                             </Text>
                         </View>
                     )}

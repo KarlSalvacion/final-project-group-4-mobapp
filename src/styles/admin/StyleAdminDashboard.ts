@@ -1,4 +1,4 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, Platform, StatusBar } from "react-native";
 
 const stylesAdminDashboard = StyleSheet.create({
     mainContainer: {
@@ -13,15 +13,18 @@ const stylesAdminDashboard = StyleSheet.create({
         width: '100%',
         backgroundColor: 'rgb(25, 153, 100)',
         paddingHorizontal: 20,
+        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
     },
     headerContent: {
         flexDirection: 'row',
         justifyContent: 'flex-start',
         alignItems: 'center',
+        flex: 1,
     },
     headerLogo: {
         width: 180,
-        height: 100,
+        height: 80,
+        resizeMode: 'contain',
     },
     headerTextContainer: {
         flexDirection: 'column',

@@ -1,4 +1,4 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, Platform, StatusBar } from "react-native";
 
 const stylesAdminUserPage = StyleSheet.create({
     mainContainer: {
@@ -6,22 +6,25 @@ const stylesAdminUserPage = StyleSheet.create({
         backgroundColor: "#fff",
     },
     headerContainer: {
-        flexDirection: "row",
-        justifyContent: "flex-start",
-        alignItems: "center",
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
         height: 120,
         width: '100%',
         backgroundColor: 'rgb(25, 153, 100)',
         paddingHorizontal: 20,
+        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
     },
     headerContent: {
         flexDirection: 'row',
         justifyContent: 'flex-start',
         alignItems: 'center',
+        flex: 1,
     },
     headerLogo: {
         width: 180,
-        height: 100,
+        height: 80,
+        resizeMode: 'contain',
     },
     userListContainer: {
         flex: 1,
@@ -134,6 +137,11 @@ const stylesAdminUserPage = StyleSheet.create({
         color: '#fff',
         fontSize: 12,
         fontWeight: '600',
+    },
+    profileButton: {
+        padding: 8,
+        borderRadius: 20,
+        backgroundColor: 'rgba(255, 255, 255, 0.2)',
     },
 });
 

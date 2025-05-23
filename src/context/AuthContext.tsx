@@ -43,10 +43,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
                 if (storedToken && storedUserData) {
                     const isValid = await validateToken(storedToken);
+                    const parsedUserData = JSON.parse(storedUserData);
                     
-                    if (isValid) {
+                    if (isValid && parsedUserData && parsedUserData.name && parsedUserData.role) {
                         setToken(storedToken);
-                        setUser(JSON.parse(storedUserData));
+                        setUser(parsedUserData);
                         setIsAuthenticated(true);
                     } else {
                         await logout();
@@ -65,6 +66,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const login = async (email: string, userData: User, token: string) => {
         try {
+            if (!userData.name || !userData.role) {
+                throw new Error('Invalid user data');
+            }
+            
             setIsAuthenticated(true);
             setUser(userData);
             setToken(token);

@@ -1,4 +1,4 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, Platform, StatusBar } from "react-native";
 
 export const stylesHomeScreen = StyleSheet.create({
     mainContainer: {
@@ -22,6 +22,7 @@ export const stylesHomeScreen = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: 'rgb(25, 153, 100)',
         paddingHorizontal: 20,
+        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
         zIndex: 1000,
         elevation: 5,
     },

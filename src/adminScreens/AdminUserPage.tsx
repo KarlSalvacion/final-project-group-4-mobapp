@@ -4,6 +4,14 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BACKEND_BASE_URL } from '../config/apiConfig';
 import stylesAdminUserPage from '../styles/admin/StyleUserPage';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
+type RootStackParamList = {
+    Profile: undefined;
+};
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 interface User {
     _id: string;
@@ -15,6 +23,7 @@ interface User {
 }
 
 const AdminUserPage = () => {
+    const navigation = useNavigation<NavigationProp>();
     const [searchQuery, setSearchQuery] = useState('');
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
@@ -203,6 +212,10 @@ const AdminUserPage = () => {
         user.username.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
+    const handleProfilePress = () => {
+        navigation.navigate('Profile');
+    };
+
     if (loading && !refreshing) {
         return (
             <View style={[stylesAdminUserPage.mainContainer, { justifyContent: 'center', alignItems: 'center' }]}>
@@ -235,6 +248,12 @@ const AdminUserPage = () => {
                         resizeMode="contain"
                     />
                 </View>
+                <TouchableOpacity
+                    style={stylesAdminUserPage.profileButton}
+                    onPress={handleProfilePress}
+                >
+                    <Ionicons name="person-circle-outline" size={32} color="#fff" />
+                </TouchableOpacity>
             </View>
 
             <View style={stylesAdminUserPage.userListContainer}>

@@ -35,9 +35,17 @@ router.get('/user/my-listings', async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     const listings = await Listing.find()
-      .populate('userId', 'name username')
+      .populate({
+        path: 'userId',
+        select: 'name username',
+        match: { _id: { $exists: true } }
+      })
       .sort({ createdAt: -1 });
-    res.json(listings);
+
+    // Filter out listings where user doesn't exist
+    const validListings = listings.filter(listing => listing.userId !== null);
+    
+    res.json(validListings);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching listings', error: error.message });
   }
@@ -94,7 +102,10 @@ router.post('/', upload.array('images', 5), async (req, res) => {
     try {
       const savedListing = await listing.save();
       console.log('Saved listing:', savedListing);
-      res.status(201).json(savedListing);
+      // Populate user information before sending response
+      const populatedListing = await Listing.findById(savedListing._id)
+        .populate('userId', 'name username');
+      res.status(201).json(populatedListing);
     } catch (error) {
       console.error('Error saving listing:', error);
       // If saving fails, delete uploaded images
@@ -107,11 +118,17 @@ router.post('/', upload.array('images', 5), async (req, res) => {
   }
 });
 
-// Get a specific listing - This must come AFTER specific routes
+// Get a specific listing
 router.get('/:id', async (req, res) => {
   try {
-    const listing = await Listing.findById(req.params.id);
-    if (!listing) {
+    const listing = await Listing.findById(req.params.id)
+      .populate({
+        path: 'userId',
+        select: 'name username',
+        match: { _id: { $exists: true } }
+      });
+
+    if (!listing || !listing.userId) {
       return res.status(404).json({ message: 'Listing not found' });
     }
     res.json(listing);

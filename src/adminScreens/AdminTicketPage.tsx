@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
     View, 
     FlatList, 
@@ -9,17 +9,21 @@ import {
     Alert,
     TextInput,
     Modal,
-    ScrollView
+    ScrollView,
+    RefreshControl
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BACKEND_BASE_URL } from '../config/apiConfig';
 import stylesAdminTicketPage from '../styles/admin/StyleTicketPage';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 interface Claim {
     _id: string;
     listingId: {
         title: string;
+        type: 'found' | 'lost';
     };
     userId: {
         name: string;
@@ -31,7 +35,14 @@ interface Claim {
     updatedAt: string;
 }
 
+type RootStackParamList = {
+    Profile: undefined;
+};
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
 const AdminTicketPage = () => {
+    const navigation = useNavigation<NavigationProp>();
     const [claims, setClaims] = useState<Claim[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -39,6 +50,7 @@ const AdminTicketPage = () => {
     const [modalVisible, setModalVisible] = useState(false);
     const [notes, setNotes] = useState('');
     const [activeFilter, setActiveFilter] = useState<'pending' | 'approved' | 'rejected'>('pending');
+    const [refreshing, setRefreshing] = useState(false);
 
     const filteredClaims = claims.filter(claim => claim.status === activeFilter);
 
@@ -78,7 +90,7 @@ const AdminTicketPage = () => {
         }
     };
 
-    const updateClaimStatus = async (claimId: string, status: 'approved' | 'rejected') => {
+    const updateClaimStatus = async (claimId: string, status: 'pending' | 'approved' | 'rejected') => {
         try {
             const token = await AsyncStorage.getItem('jwtToken');
             if (!token) throw new Error('No authentication token found');
@@ -117,6 +129,16 @@ const AdminTicketPage = () => {
         setModalVisible(true);
     };
 
+    const handleProfilePress = () => {
+        navigation.navigate('Profile');
+    };
+
+    const onRefresh = useCallback(async () => {
+        setRefreshing(true);
+        await fetchClaims();
+        setRefreshing(false);
+    }, [fetchClaims]);
+
     useEffect(() => {
         fetchClaims();
     }, []);
@@ -145,15 +167,20 @@ const AdminTicketPage = () => {
 
     return (
         <View style={stylesAdminTicketPage.mainContainer}>
-            {/* Slimmer Header Bar */}
             <View style={stylesAdminTicketPage.headerContainer}>
                 <View style={stylesAdminTicketPage.headerContent}>
-                    <Image
+                    <Image 
                         source={require('../assets/looke_logo.png')}
                         style={stylesAdminTicketPage.headerLogo}
                         resizeMode="contain"
                     />
                 </View>
+                <TouchableOpacity
+                    style={stylesAdminTicketPage.profileButton}
+                    onPress={handleProfilePress}
+                >
+                    <Ionicons name="person-circle-outline" size={32} color="#fff" />
+                </TouchableOpacity>
             </View>
 
             {/* Centered Title */}
@@ -174,7 +201,7 @@ const AdminTicketPage = () => {
                 <TouchableOpacity
                     style={[
                         stylesAdminTicketPage.filterButton,
-                        stylesAdminTicketPage.approvedButton,
+                        stylesAdminTicketPage.approveButton,
                         activeFilter === 'approved' ? { opacity: 1 } : { opacity: 0.5 }
                     ]}
                     onPress={() => setActiveFilter('approved')}
@@ -184,7 +211,7 @@ const AdminTicketPage = () => {
                 <TouchableOpacity
                     style={[
                         stylesAdminTicketPage.filterButton,
-                        stylesAdminTicketPage.rejectedButton,
+                        stylesAdminTicketPage.rejectButton,
                         activeFilter === 'rejected' ? { opacity: 1 } : { opacity: 0.5 }
                     ]}
                     onPress={() => setActiveFilter('rejected')}
@@ -206,6 +233,14 @@ const AdminTicketPage = () => {
                 <FlatList
                     data={filteredClaims}
                     keyExtractor={(item) => item._id}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            colors={['rgb(25, 153, 100)']}
+                            tintColor="rgb(25, 153, 100)"
+                        />
+                    }
                     renderItem={({ item }) => (
                         <TouchableOpacity 
                             style={stylesAdminTicketPage.claimItem}
@@ -213,17 +248,31 @@ const AdminTicketPage = () => {
                         >
                             <View style={stylesAdminTicketPage.claimHeader}>
                                 <Text style={stylesAdminTicketPage.claimTitle}>{item.description}</Text>
-                                <View style={[
-                                    stylesAdminTicketPage.statusBadge,
-                                    { backgroundColor: item.status === 'pending' ? '#FFA500' : 
-                                                    item.status === 'approved' ? '#4CAF50' : '#F44336' }
-                                ]}>
-                                    <Text style={stylesAdminTicketPage.statusText}>
-                                        {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-                                    </Text>
+                                <View style={stylesAdminTicketPage.statusContainer}>
+                                    <View style={[
+                                        stylesAdminTicketPage.typeBadge,
+                                        { backgroundColor: item.listingId?.type === 'found' ? '#2196F3' : '#9C27B0' }
+                                    ]}>
+                                        <Text style={stylesAdminTicketPage.typeText}>
+                                            {item.listingId?.type ? 
+                                                item.listingId.type.charAt(0).toUpperCase() + item.listingId.type.slice(1) 
+                                                : 'Unknown'}
+                                        </Text>
+                                    </View>
+                                    <View style={[
+                                        stylesAdminTicketPage.statusBadge,
+                                        { backgroundColor: item.status === 'pending' ? '#FFA500' : 
+                                                        item.status === 'approved' ? '#4CAF50' : '#F44336' }
+                                    ]}>
+                                        <Text style={stylesAdminTicketPage.statusText}>
+                                            {item.status ? 
+                                                item.status.charAt(0).toUpperCase() + item.status.slice(1)
+                                                : 'Unknown'}
+                                        </Text>
+                                    </View>
                                 </View>
                             </View>
-                            <Text style={stylesAdminTicketPage.claimUser}>By: {item.userId.name}</Text>
+                            <Text style={stylesAdminTicketPage.claimUser}>By: {item.userId?.name || 'Unknown User'}</Text>
                             <Text style={stylesAdminTicketPage.claimDate}>
                                 {new Date(item.createdAt).toLocaleDateString()}
                             </Text>
@@ -245,64 +294,116 @@ const AdminTicketPage = () => {
             >
                 <View style={stylesAdminTicketPage.modalContainer}>
                     <View style={stylesAdminTicketPage.modalContent}>
-                        <Text style={stylesAdminTicketPage.modalTitle}>Claim Details</Text>
-                        {selectedClaim && (
-                            <>
-                                <ScrollView horizontal style={stylesAdminTicketPage.imageScrollView}>
-                                    {selectedClaim.proofImages.map((image, index) => (
-                                        <Image
-                                            key={index}
-                                            source={{ uri: image }}
-                                            style={stylesAdminTicketPage.proofImage}
-                                            resizeMode="cover"
+                        <View style={stylesAdminTicketPage.modalHeader}>
+                            <Text style={stylesAdminTicketPage.modalTitle}>Ticket Details</Text>
+                            <TouchableOpacity
+                                style={stylesAdminTicketPage.closeButton}
+                                onPress={() => {
+                                    setModalVisible(false);
+                                    setSelectedClaim(null);
+                                    setNotes('');
+                                }}
+                            >
+                                <Ionicons name="close" size={24} color="#333" />
+                            </TouchableOpacity>
+                        </View>
+
+                        <ScrollView style={stylesAdminTicketPage.modalBody}>
+                            {selectedClaim && (
+                                <>
+                                    <View style={stylesAdminTicketPage.modalSection}>
+                                        <Text style={stylesAdminTicketPage.sectionTitle}>Listing</Text>
+                                        <Text style={stylesAdminTicketPage.sectionContent}>{selectedClaim.listingId?.title || 'Unknown Listing'}</Text>
+                                        <View style={stylesAdminTicketPage.statusContainer}>
+                                            <View style={[
+                                                stylesAdminTicketPage.typeBadge,
+                                                { backgroundColor: selectedClaim.listingId?.type === 'found' ? '#2196F3' : '#9C27B0' }
+                                            ]}>
+                                                <Text style={stylesAdminTicketPage.typeText}>
+                                                    {selectedClaim.listingId?.type ? 
+                                                        selectedClaim.listingId.type.charAt(0).toUpperCase() + selectedClaim.listingId.type.slice(1) 
+                                                        : 'Unknown'}
+                                                </Text>
+                                            </View>
+                                            <View style={[
+                                                stylesAdminTicketPage.statusBadge,
+                                                { backgroundColor: selectedClaim.status === 'pending' ? '#FFA500' : 
+                                                                selectedClaim.status === 'approved' ? '#4CAF50' : '#F44336' }
+                                            ]}>
+                                                <Text style={stylesAdminTicketPage.statusText}>
+                                                    {selectedClaim.status.charAt(0).toUpperCase() + selectedClaim.status.slice(1)}
+                                                </Text>
+                                            </View>
+                                        </View>
+                                    </View>
+
+                                    <View style={stylesAdminTicketPage.modalSection}>
+                                        <Text style={stylesAdminTicketPage.sectionTitle}>Description</Text>
+                                        <Text style={stylesAdminTicketPage.sectionContent}>{selectedClaim.description || 'No description provided'}</Text>
+                                    </View>
+
+                                    <View style={stylesAdminTicketPage.modalSection}>
+                                        <Text style={stylesAdminTicketPage.sectionTitle}>Submitted By</Text>
+                                        <Text style={stylesAdminTicketPage.sectionContent}>{selectedClaim.userId?.name || 'Unknown User'}</Text>
+                                    </View>
+
+                                    <View style={stylesAdminTicketPage.modalSection}>
+                                        <Text style={stylesAdminTicketPage.sectionTitle}>Date Submitted</Text>
+                                        <Text style={stylesAdminTicketPage.sectionContent}>
+                                            {new Date(selectedClaim.createdAt).toLocaleDateString()}
+                                        </Text>
+                                    </View>
+
+                                    {selectedClaim.proofImages && selectedClaim.proofImages.length > 0 && (
+                                        <View style={stylesAdminTicketPage.modalSection}>
+                                            <Text style={stylesAdminTicketPage.sectionTitle}>Proof Images</Text>
+                                            <ScrollView horizontal style={stylesAdminTicketPage.imageScrollView}>
+                                                {selectedClaim.proofImages.map((image, index) => (
+                                                    <Image
+                                                        key={index}
+                                                        source={{ uri: image }}
+                                                        style={stylesAdminTicketPage.proofImage}
+                                                        resizeMode="cover"
+                                                    />
+                                                ))}
+                                            </ScrollView>
+                                        </View>
+                                    )}
+
+                                    <View style={stylesAdminTicketPage.modalSection}>
+                                        <Text style={stylesAdminTicketPage.sectionTitle}>Admin Notes</Text>
+                                        <TextInput
+                                            style={stylesAdminTicketPage.notesInput}
+                                            placeholder="Add notes..."
+                                            value={notes}
+                                            onChangeText={setNotes}
+                                            multiline
                                         />
-                                    ))}
-                                </ScrollView>
-                                <Text style={stylesAdminTicketPage.modalText}>
-                                    Description: {selectedClaim.description}
-                                </Text>
-                                <Text style={stylesAdminTicketPage.modalText}>
-                                    User: {selectedClaim.userId.name}
-                                </Text>
-                                <Text style={stylesAdminTicketPage.modalText}>
-                                    Status: {selectedClaim.status}
-                                </Text>
-                                <Text style={stylesAdminTicketPage.modalText}>
-                                    Listing: {selectedClaim.listingId.title}
-                                </Text>
-                                <TextInput
-                                    style={stylesAdminTicketPage.notesInput}
-                                    placeholder="Add notes..."
-                                    value={notes}
-                                    onChangeText={setNotes}
-                                    multiline
-                                />
-                                <View style={stylesAdminTicketPage.modalButtons}>
-                                    <TouchableOpacity
-                                        style={[stylesAdminTicketPage.modalButton, { backgroundColor: '#4CAF50' }]}
-                                        onPress={() => updateClaimStatus(selectedClaim._id, 'approved')}
-                                    >
-                                        <Text style={stylesAdminTicketPage.modalButtonText}>Approve</Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                        style={[stylesAdminTicketPage.modalButton, { backgroundColor: '#F44336' }]}
-                                        onPress={() => updateClaimStatus(selectedClaim._id, 'rejected')}
-                                    >
-                                        <Text style={stylesAdminTicketPage.modalButtonText}>Reject</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </>
-                        )}
-                        <TouchableOpacity
-                            style={stylesAdminTicketPage.closeButton}
-                            onPress={() => {
-                                setModalVisible(false);
-                                setSelectedClaim(null);
-                                setNotes('');
-                            }}
-                        >
-                            <Text style={stylesAdminTicketPage.closeButtonText}>Close</Text>
-                        </TouchableOpacity>
+                                    </View>
+
+                                    <View style={stylesAdminTicketPage.modalButtons}>
+                                        <TouchableOpacity
+                                            style={[stylesAdminTicketPage.modalButton, { backgroundColor: '#FFA500' }]}
+                                            onPress={() => updateClaimStatus(selectedClaim._id, 'pending')}
+                                        >
+                                            <Text style={stylesAdminTicketPage.modalButtonText}>Pending</Text>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity
+                                            style={[stylesAdminTicketPage.modalButton, { backgroundColor: '#4CAF50' }]}
+                                            onPress={() => updateClaimStatus(selectedClaim._id, 'approved')}
+                                        >
+                                            <Text style={stylesAdminTicketPage.modalButtonText}>Approve</Text>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity
+                                            style={[stylesAdminTicketPage.modalButton, { backgroundColor: '#F44336' }]}
+                                            onPress={() => updateClaimStatus(selectedClaim._id, 'rejected')}
+                                        >
+                                            <Text style={stylesAdminTicketPage.modalButtonText}>Reject</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                </>
+                            )}
+                        </ScrollView>
                     </View>
                 </View>
             </Modal>

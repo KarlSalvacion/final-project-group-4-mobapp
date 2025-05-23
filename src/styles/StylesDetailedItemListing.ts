@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform, StatusBar } from 'react-native';
 
 export const stylesDetailedItemListing = StyleSheet.create({
     mainContainer: {
@@ -13,6 +13,7 @@ export const stylesDetailedItemListing = StyleSheet.create({
         flexDirection: 'row',
         backgroundColor: 'rgb(25, 153, 100)',
         paddingHorizontal: 20,
+        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
         gap: 10,
     },
     backButton: {
@@ -66,9 +67,9 @@ export const stylesDetailedItemListing = StyleSheet.create({
     claimButton: {
         backgroundColor: 'rgb(25, 153, 100)',
         padding: 15,
-        borderRadius: 10,
+        borderRadius: 8,
         alignItems: 'center',
-        marginTop: 20,
+        marginBottom: 10,
     },
     claimButtonDisabled: {
         backgroundColor: '#ccc',
@@ -77,7 +78,7 @@ export const stylesDetailedItemListing = StyleSheet.create({
     claimButtonText: {
         color: '#fff',
         fontSize: 16,
-        fontWeight: 'bold',
+        fontWeight: '500',
     },
     modalContainer: {
         flex: 1,
@@ -278,6 +279,36 @@ export const stylesDetailedItemListing = StyleSheet.create({
     map: {
         width: '100%',
         height: 200,
+    },
+    claimStatusContainer: {
+        marginVertical: 10,
+        padding: 10,
+        backgroundColor: '#f5f5f5',
+        borderRadius: 8,
+    },
+    claimStatusText: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginBottom: 5,
+    },
+    notesContainer: {
+        marginTop: 5,
+        padding: 8,
+        backgroundColor: '#fff',
+        borderRadius: 4,
+        borderWidth: 1,
+        borderColor: '#e0e0e0',
+    },
+    notesLabel: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#666',
+        marginBottom: 4,
+    },
+    notesText: {
+        fontSize: 14,
+        color: '#333',
+        lineHeight: 20,
     },
 });
 

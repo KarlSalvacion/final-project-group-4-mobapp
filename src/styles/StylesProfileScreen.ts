@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform, StatusBar } from 'react-native';
 
 const stylesProfileScreen = StyleSheet.create({
     mainContainer: {
@@ -7,25 +7,29 @@ const stylesProfileScreen = StyleSheet.create({
     },
     headerContainer: {
         flexDirection: 'row',
-        justifyContent: 'flex-start',
+        justifyContent: 'space-between',
         alignItems: 'center',
         height: 120,
         width: '100%',
         backgroundColor: 'rgb(25, 153, 100)',
         paddingHorizontal: 20,
+        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
     },
     headerContent: {
         flexDirection: 'row',
         justifyContent: 'flex-start',
         alignItems: 'center',
-        gap: 15,
+        flex: 1,
     },
     backButton: {
         padding: 8,
+        borderRadius: 20,
+        backgroundColor: 'rgba(255, 255, 255, 0.2)',
     },
     headerLogo: {
         width: 180,
-        height: 100,
+        height: 80,
+        resizeMode: 'contain',
     },
     scrollView: {
         flex: 1,

@@ -16,19 +16,25 @@ export interface Listing {
     userId: {
         _id: string;
         name: string;
-        email: string;
     };
     title: string;
     description: string;
-    type: ListingType;
-    category: string;
+    type: 'found' | 'lost';
+    status: 'active' | 'claimed' | 'closed';
+    images: string[];
     location: string;
     date: string;
     time: string;
-    images: string[];
-    status: 'active' | 'claimed' | 'closed';
     createdAt: string;
-    updatedAt: string;
+    claims?: {
+        _id: string;
+        userId: {
+            name: string;
+        };
+        status: 'pending' | 'approved' | 'rejected';
+        description: string;
+        createdAt: string;
+    }[];
 }
 
 export interface Claim {

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useMemo } from 'react';
-import { View, Text, TouchableOpacity, FlatList, ActivityIndicator, Image, RefreshControl, Animated, Pressable } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, ActivityIndicator, Image, RefreshControl, Animated, Pressable, Platform, StatusBar } from 'react-native';
 import { stylesHomeScreen } from '../styles/StylesHomeScreen';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -19,8 +19,9 @@ type RootStackParamList = {
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
 
-const HEADER_MAX_HEIGHT = 120;
-const HEADER_MIN_HEIGHT = 60;
+const STATUS_BAR_HEIGHT = Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0;
+const HEADER_MAX_HEIGHT = 120 + STATUS_BAR_HEIGHT;
+const HEADER_MIN_HEIGHT = 60 + STATUS_BAR_HEIGHT;
 const HEADER_SCROLL_DISTANCE = HEADER_MAX_HEIGHT - HEADER_MIN_HEIGHT;
 const SEARCH_DEBOUNCE_DELAY = 300; // 300ms delay
 

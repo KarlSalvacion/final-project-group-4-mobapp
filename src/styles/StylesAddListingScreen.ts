@@ -1,5 +1,5 @@
 import { Picker } from "@react-native-picker/picker";
-import { StyleSheet } from "react-native";
+import { StyleSheet, Platform, StatusBar } from "react-native";
 
 export const stylesAddListingScreen = StyleSheet.create({
     mainContainer: {
@@ -7,14 +7,14 @@ export const stylesAddListingScreen = StyleSheet.create({
         width: '100%',
     },
     headerContainer: {
-        height: 50,
-        width: '100%',
-        alignItems: 'center',
-        justifyContent: 'space-between',
         flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        height: 80,
+        width: '100%',
         backgroundColor: 'rgb(25, 153, 100)',
         paddingHorizontal: 20,
-        gap: 10,
+        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
     },
 
     headerContent: {

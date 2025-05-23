@@ -16,7 +16,8 @@ const Stack = createStackNavigator();
 const AppNavigator = () => {
     const { isAuthenticated, user, isLoading } = useAuth();
 
-    if (isLoading) {
+    // Show loading screen while auth state is being determined
+    if (isLoading || (isAuthenticated && !user)) {
         return <LoadingScreen />;
     }
 

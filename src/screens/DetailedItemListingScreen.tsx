@@ -43,8 +43,40 @@ const DetailedItemListingScreen = () => {
     const listing = listings.find(l => l._id === listingId);
 
     const hasExistingClaim = userClaims.some(
-        claim => claim.listingId === listingId && claim.status === 'pending'
+        claim => String(claim.listingId._id) === String(listingId) && claim.status === 'pending'
     );
+
+    const existingClaim = userClaims.find(
+        claim => String(claim.listingId._id) === String(listingId)
+    );
+
+    const isClaimDisabled = hasExistingClaim || isLoadingClaims || Boolean(existingClaim);
+
+    const getClaimStatusText = (status: string) => {
+        switch (status) {
+            case 'approved':
+                return 'Claim Approved';
+            case 'rejected':
+                return 'Claim Rejected';
+            case 'pending':
+                return 'Claim Pending';
+            default:
+                return 'Unknown Status';
+        }
+    };
+
+    const getClaimStatusColor = (status: string) => {
+        switch (status) {
+            case 'approved':
+                return '#4CAF50'; // Green
+            case 'rejected':
+                return '#F44336'; // Red
+            case 'pending':
+                return '#FFC107'; // Yellow
+            default:
+                return '#9E9E9E'; // Grey
+        }
+    };
 
     useEffect(() => {
         const fetchUserClaims = async () => {
@@ -163,35 +195,46 @@ const DetailedItemListingScreen = () => {
             const formData = new FormData();
             formData.append('listingId', listing._id);
             formData.append('description', claimExplanation);
+            formData.append('type', 'claim');
 
-            proofImages.forEach((uri, index) => {
-                const filename = uri.split('/').pop();
-                const match = /\.(\w+)$/.exec(filename || '');
+            console.log('Proof Images:', proofImages);
+
+            // Handle images
+            for (const uri of proofImages) {
+                const filename = uri.split('/').pop() || 'image.jpg';
+                const match = /\.(\w+)$/.exec(filename);
                 const type = match ? `image/${match[1]}` : 'image/jpeg';
                 
                 formData.append('proofImages', {
-                    uri,
-                    name: filename,
+                    uri: Platform.OS === 'android' ? uri : uri.replace('file://', ''),
                     type,
+                    name: filename,
                 } as any);
-            });
+            }
+
+            console.log('FormData contents:');
+            console.log('- listingId:', listing._id);
+            console.log('- description:', claimExplanation);
+            console.log('- type: claim');
+            console.log('- proofImages:', proofImages.length, 'images');
 
             const response = await fetch(`${BACKEND_BASE_URL}/api/claims`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'multipart/form-data',
                 },
                 body: formData,
             });
 
+            console.log('Response status:', response.status);
+            const responseData = await response.json();
+            console.log('Response data:', responseData);
+
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to submit claim');
+                throw new Error(responseData.message || 'Failed to submit claim');
             }
 
-            const newClaim = await response.json();
-            setUserClaims([...userClaims, newClaim]);
+            setUserClaims([...userClaims, responseData]);
 
             Alert.alert(
                 'Success',
@@ -209,6 +252,7 @@ const DetailedItemListingScreen = () => {
                 ]
             );
         } catch (error) {
+            console.error('Error submitting claim:', error);
             Alert.alert(
                 'Error',
                 error instanceof Error ? error.message : 'Failed to submit claim. Please try again.'
@@ -241,34 +285,44 @@ const DetailedItemListingScreen = () => {
             formData.append('description', foundExplanation);
             formData.append('type', 'found');
 
-            foundImages.forEach((uri, index) => {
-                const filename = uri.split('/').pop();
-                const match = /\.(\w+)$/.exec(filename || '');
+            console.log('Found Images:', foundImages);
+
+            // Handle images
+            for (const uri of foundImages) {
+                const filename = uri.split('/').pop() || 'image.jpg';
+                const match = /\.(\w+)$/.exec(filename);
                 const type = match ? `image/${match[1]}` : 'image/jpeg';
                 
-                formData.append('images', {
-                    uri,
-                    name: filename,
+                formData.append('proofImages', {
+                    uri: Platform.OS === 'android' ? uri : uri.replace('file://', ''),
                     type,
+                    name: filename,
                 } as any);
-            });
+            }
+
+            console.log('FormData contents:');
+            console.log('- listingId:', listing._id);
+            console.log('- description:', foundExplanation);
+            console.log('- type: found');
+            console.log('- proofImages:', foundImages.length, 'images');
 
             const response = await fetch(`${BACKEND_BASE_URL}/api/claims`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'multipart/form-data',
                 },
                 body: formData,
             });
 
+            console.log('Response status:', response.status);
+            const responseData = await response.json();
+            console.log('Response data:', responseData);
+
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to submit found item');
+                throw new Error(responseData.message || 'Failed to submit found item');
             }
 
-            const newClaim = await response.json();
-            setUserClaims([...userClaims, newClaim]);
+            setUserClaims([...userClaims, responseData]);
 
             Alert.alert(
                 'Success',
@@ -326,6 +380,16 @@ const DetailedItemListingScreen = () => {
             Alert.alert(
                 'Not Allowed',
                 'You cannot claim or report finding your own items.',
+                [{ text: 'OK' }]
+            );
+            return;
+        }
+
+        // Check for existing claim
+        if (hasExistingClaim) {
+            Alert.alert(
+                'Existing Claim',
+                'You already have a pending claim for this item.',
                 [{ text: 'OK' }]
             );
             return;
@@ -467,6 +531,39 @@ const DetailedItemListingScreen = () => {
         }
     }, [isEditModalVisible, listing]);
 
+    // Function to delete a pending claim
+    const handleDeleteClaim = async (claimId: string) => {
+        Alert.alert(
+            'Delete Claim',
+            'Are you sure you want to delete your pending claim?',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            const response = await fetch(`${BACKEND_BASE_URL}/api/claims/${claimId}`, {
+                                method: 'DELETE',
+                                headers: {
+                                    'Authorization': `Bearer ${token}`,
+                                },
+                            });
+                            if (!response.ok) {
+                                const errorData = await response.json();
+                                throw new Error(errorData.message || 'Failed to delete claim');
+                            }
+                            setUserClaims(userClaims.filter(c => c._id !== claimId));
+                            Alert.alert('Success', 'Your claim has been deleted.');
+                        } catch (error) {
+                            Alert.alert('Error', error instanceof Error ? error.message : 'Failed to delete claim');
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
     if (!listing) {
         return (
             <View style={stylesDetailedItemListing.mainContainer}>
@@ -505,12 +602,40 @@ const DetailedItemListingScreen = () => {
                                 {listing.type.toUpperCase()}
                             </Text>
                         </View>
+
+                        {/* Show claim status and notes if they exist */}
+                        {existingClaim && (
+                            <View style={stylesDetailedItemListing.claimStatusContainer}>
+                                <Text style={[
+                                    stylesDetailedItemListing.claimStatusText,
+                                    { color: getClaimStatusColor(existingClaim.status) }
+                                ]}>
+                                    {getClaimStatusText(existingClaim.status)}
+                                </Text>
+                                {existingClaim.notes && (
+                                    <View style={stylesDetailedItemListing.notesContainer}>
+                                        <Text style={stylesDetailedItemListing.notesLabel}>Admin Notes:</Text>
+                                        <Text style={stylesDetailedItemListing.notesText}>{existingClaim.notes}</Text>
+                                    </View>
+                                )}
+                                {/* Show delete button for pending claims owned by the user */}
+                                {existingClaim.status === 'pending' && user && ((existingClaim.userId?._id || existingClaim.userId) === (user._id || user.id)) && (
+                                    <TouchableOpacity
+                                        style={[stylesDetailedItemListing.claimButton, { backgroundColor: '#e74c3c', marginTop: 10 }]}
+                                        onPress={() => handleDeleteClaim(existingClaim._id)}
+                                    >
+                                        <Text style={stylesDetailedItemListing.claimButtonText}>Delete Claim</Text>
+                                    </TouchableOpacity>
+                                )}
+                            </View>
+                        )}
+
                         <Text style={stylesDetailedItemListing.description}>{listing.description}</Text>
                         
                         <View style={stylesDetailedItemListing.detailsContainer}>
                             <Ionicons name="person-outline" style={stylesDetailedItemListing.icon} />
                             <Text style={stylesDetailedItemListing.detailText}>
-                                Posted by {listing.userId?.name || listing.userId?.username || 'Anonymous'}
+                                Posted by {listing.userId?.name || 'Anonymous'}
                             </Text>
                         </View>
 
@@ -531,16 +656,17 @@ const DetailedItemListingScreen = () => {
                                 <TouchableOpacity
                                     style={[
                                         stylesDetailedItemListing.claimButton,
-                                        (hasExistingClaim || isLoadingClaims) && stylesDetailedItemListing.claimButtonDisabled
+                                        isClaimDisabled && stylesDetailedItemListing.claimButtonDisabled
                                     ]}
                                     onPress={() => handleSubmit(false)}
-                                    disabled={hasExistingClaim || isLoadingClaims}
+                                    disabled={isClaimDisabled}
                                 >
                                     {isLoadingClaims ? (
                                         <ActivityIndicator color="#fff" />
                                     ) : (
                                         <Text style={stylesDetailedItemListing.claimButtonText}>
-                                            {hasExistingClaim ? 'Claim Pending' : 'Claim This Item'}
+                                            {existingClaim ? getClaimStatusText(existingClaim.status) : 
+                                             hasExistingClaim ? 'Claim Pending' : 'Claim This Item'}
                                         </Text>
                                     )}
                                 </TouchableOpacity>
@@ -548,16 +674,17 @@ const DetailedItemListingScreen = () => {
                                 <TouchableOpacity
                                     style={[
                                         stylesDetailedItemListing.claimButton,
-                                        (hasExistingClaim || isLoadingClaims) && stylesDetailedItemListing.claimButtonDisabled
+                                        isClaimDisabled && stylesDetailedItemListing.claimButtonDisabled
                                     ]}
                                     onPress={() => handleSubmit(true)}
-                                    disabled={hasExistingClaim || isLoadingClaims}
+                                    disabled={isClaimDisabled}
                                 >
                                     {isLoadingClaims ? (
                                         <ActivityIndicator color="#fff" />
                                     ) : (
                                         <Text style={stylesDetailedItemListing.claimButtonText}>
-                                            {hasExistingClaim ? 'Found Pending' : 'I Found This Item'}
+                                            {existingClaim ? getClaimStatusText(existingClaim.status) :
+                                             hasExistingClaim ? 'Found Pending' : 'I Found This Item'}
                                         </Text>
                                     )}
                                 </TouchableOpacity>

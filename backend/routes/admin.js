@@ -9,10 +9,29 @@ const adminAuth = require('../middleware/adminAuth');
 router.get('/claims', adminAuth, async (req, res) => {
     try {
         const claims = await Claim.find()
-            .populate('userId', 'name email')
-            .populate('listingId')
+            .populate({
+                path: 'userId',
+                select: 'name email',
+                match: { _id: { $exists: true } }
+            })
+            .populate({
+                path: 'listingId',
+                populate: {
+                    path: 'userId',
+                    select: 'name email',
+                    match: { _id: { $exists: true } }
+                }
+            })
             .sort({ createdAt: -1 });
-        res.json({ success: true, claims });
+
+        // Filter out claims where user or listing's user doesn't exist
+        const validClaims = claims.filter(claim => 
+            claim.userId !== null && 
+            claim.listingId && 
+            claim.listingId.userId !== null
+        );
+
+        res.json({ success: true, claims: validClaims });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Error fetching claims' });
     }
@@ -42,9 +61,35 @@ router.put('/claims/:id', adminAuth, async (req, res) => {
 router.get('/listings', adminAuth, async (req, res) => {
     try {
         const listings = await Listing.find()
-            .populate('userId', 'name email')
+            .populate({
+                path: 'userId',
+                select: 'name email',
+                match: { _id: { $exists: true } }
+            })
             .sort({ createdAt: -1 });
-        res.json({ success: true, listings });
+
+        // Filter out listings where user doesn't exist
+        const validListings = listings.filter(listing => listing.userId !== null);
+
+        // For each listing, fetch its claims
+        const listingsWithClaims = await Promise.all(
+            validListings.map(async (listing) => {
+                const claims = await Claim.find({ listingId: listing._id })
+                    .populate({
+                        path: 'userId',
+                        select: 'name',
+                        match: { _id: { $exists: true } }
+                    })
+                    .select('userId status description createdAt')
+                    .lean();
+                
+                // Filter out claims where user doesn't exist
+                const validClaims = claims.filter(claim => claim.userId !== null);
+                return { ...listing.toObject(), claims: validClaims };
+            })
+        );
+
+        res.json({ success: true, listings: listingsWithClaims });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Error fetching listings' });
     }

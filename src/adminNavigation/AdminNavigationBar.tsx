@@ -5,7 +5,7 @@ import AdminDashboard from '../adminScreens/AdminDashboard';
 import AdminListingPage from '../adminScreens/AdminListingPage';
 import AdminTicketPage from '../adminScreens/AdminTicketPage';
 import AdminUserPage from '../adminScreens/AdminUserPage';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 
 const Tab = createBottomTabNavigator();
 
@@ -14,8 +14,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgb(25, 153, 100)',
     borderTopWidth: 0,
     elevation: 0,
-    height: 60,
-    paddingBottom: 10,
+    height: Platform.OS === 'android' ? 90 : 60,
+    paddingBottom: Platform.OS === 'android' ? 30 : 10,
   },
 });
 

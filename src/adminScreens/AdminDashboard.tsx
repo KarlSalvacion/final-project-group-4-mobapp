@@ -7,6 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BACKEND_BASE_URL } from '../config/apiConfig';
 import stylesAdminDashboard from '../styles/admin/StyleAdminDashboard';
 import { Claim } from '../types';
+import { useAuth } from '../context/AuthContext';
 
 type RootStackParamList = {
     Tickets: undefined;
@@ -15,10 +16,9 @@ type RootStackParamList = {
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-const REFRESH_INTERVAL = 30000; // 30 seconds
-
 const AdminDashboard = () => {
     const navigation = useNavigation<NavigationProp>();
+    const { isLoading: authLoading } = useAuth();
     const [claims, setClaims] = useState<Claim[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -80,16 +80,10 @@ const AdminDashboard = () => {
         }
     }, []);
 
-    // Auto-refresh when screen is focused
+    // Fetch claims when screen is focused
     useFocusEffect(
         useCallback(() => {
             fetchClaims();
-            
-            // Set up interval for auto-refresh
-            const intervalId = setInterval(fetchClaims, REFRESH_INTERVAL);
-            
-            // Cleanup interval when screen loses focus
-            return () => clearInterval(intervalId);
         }, [fetchClaims])
     );
 
@@ -107,7 +101,7 @@ const AdminDashboard = () => {
         navigation.navigate('Profile');
     };
 
-    if (loading && !refreshing) {
+    if (authLoading || (loading && !refreshing)) {
         return (
             <View style={[stylesAdminDashboard.mainContainer, { justifyContent: 'center', alignItems: 'center' }]}> 
                 <ActivityIndicator size="large" color="rgb(25, 153, 100)" />
@@ -210,7 +204,7 @@ const AdminDashboard = () => {
                                     Status: {ticket.status.charAt(0).toUpperCase() + ticket.status.slice(1)}
                                 </Text>
                                 <Text style={stylesAdminDashboard.ticketUser}>
-                                    By: {ticket.userId.name}
+                                    By: {ticket.userId?.name || 'Unknown User'}
                                 </Text>
                             </View>
                         ))}
