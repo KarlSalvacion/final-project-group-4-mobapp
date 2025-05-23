@@ -91,7 +91,7 @@ export const stylesDetailedItemListing = StyleSheet.create({
         padding: 20,
         width: '90%',
         maxWidth: 400,
-        maxHeight: 600,
+        maxHeight: 700,
     },
     modalTitle: {
         fontSize: 20,
@@ -104,6 +104,16 @@ export const stylesDetailedItemListing = StyleSheet.create({
         color: '#666',
         marginBottom: 20,
     },
+
+    claimInputTitle: {
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderRadius: 8,
+        padding: 10,
+        fontSize: 14,
+        textAlignVertical: 'top',
+    },
+
     claimInput: {
         borderWidth: 1,
         borderColor: '#ddd',

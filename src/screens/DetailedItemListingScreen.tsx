@@ -361,6 +361,15 @@ const DetailedItemListingScreen = () => {
     const handleUpdate = async () => {
         if (!listing) return;
 
+        if (editImages.length === 0) {
+            Alert.alert(
+                'Error',
+                'Please add at least one image before saving changes.',
+                [{ text: 'OK' }]
+            );
+            return;
+        }
+
         try {
             setIsSubmitting(true);
             const formData = new FormData();
@@ -559,17 +568,27 @@ const DetailedItemListingScreen = () => {
                                                     : 'Please provide details about why you believe this is your lost item.'}
                                             </Text>
                                             
-                                            <TextInput
-                                                style={stylesDetailedItemListing.claimInput}
-                                                multiline
-                                                numberOfLines={6}
-                                                placeholder="Explain why this item belongs to you..."
-                                                placeholderTextColor={'#999'}
-                                                autoCapitalize="sentences"
-                                                value={claimExplanation}
-                                                onChangeText={setClaimExplanation}
-                                                selectionColor={'rgba(25, 153, 100, 1)'}
-                                            />
+                                            <View style={{ position: 'relative' }}>
+                                                <TextInput
+                                                    style={stylesDetailedItemListing.claimInput}
+                                                    multiline
+                                                    numberOfLines={6}
+                                                    placeholder="Explain why this item belongs to you..."
+                                                    placeholderTextColor={'#999'}
+                                                    autoCapitalize="sentences"
+                                                    value={claimExplanation}
+                                                    onChangeText={setClaimExplanation}
+                                                    selectionColor={'rgba(25, 153, 100, 1)'}
+                                                />
+                                                {claimExplanation.length > 0 && (
+                                                    <TouchableOpacity
+                                                        style={{ position: 'absolute', right: 10, top: 10 }}
+                                                        onPress={() => setClaimExplanation('')}
+                                                    >
+                                                        <Ionicons name="close-circle" size={20} color="#aaa" />
+                                                    </TouchableOpacity>
+                                                )}
+                                            </View>
 
                                             <View style={stylesDetailedItemListing.imageUploadContainer}>
                                                 <Text style={stylesDetailedItemListing.imageUploadTitle}>
@@ -661,14 +680,24 @@ const DetailedItemListingScreen = () => {
                                                 Please provide details about where and how you found this item.
                                             </Text>
                                             
-                                            <TextInput
-                                                style={stylesDetailedItemListing.claimInput}
-                                                multiline
-                                                numberOfLines={6}
-                                                placeholder="Describe where and how you found this item..."
-                                                value={foundExplanation}
-                                                onChangeText={setFoundExplanation}
-                                            />
+                                            <View style={{ position: 'relative' }}>
+                                                <TextInput
+                                                    style={stylesDetailedItemListing.claimInput}
+                                                    multiline
+                                                    numberOfLines={6}
+                                                    placeholder="Describe where and how you found this item..."
+                                                    value={foundExplanation}
+                                                    onChangeText={setFoundExplanation}
+                                                />
+                                                {foundExplanation.length > 0 && (
+                                                    <TouchableOpacity
+                                                        style={{ position: 'absolute', right: 10, top: 10 }}
+                                                        onPress={() => setFoundExplanation('')}
+                                                    >
+                                                        <Ionicons name="close-circle" size={20} color="#aaa" />
+                                                    </TouchableOpacity>
+                                                )}
+                                            </View>
 
                                             <View style={stylesDetailedItemListing.imageUploadContainer}>
                                                 <Text style={stylesDetailedItemListing.imageUploadTitle}>
@@ -761,25 +790,45 @@ const DetailedItemListingScreen = () => {
                                             </Text>
                                             
                                             <View style={stylesDetailedItemListing.formGroup}>
-                                                <Text style={stylesDetailedItemListing.formLabel}>Title</Text>
-                                                <TextInput
-                                                    style={stylesDetailedItemListing.claimInput}
-                                                    placeholder="Enter item title"
-                                                    value={editTitle}
-                                                    onChangeText={setEditTitle}
-                                                />
+                                                <Text style={stylesDetailedItemListing.formLabel}>Name</Text>
+                                                <View style={{ position: 'relative' }}>
+                                                    <TextInput
+                                                        style={stylesDetailedItemListing.claimInputTitle}
+                                                        placeholder="Enter item name"
+                                                        value={editTitle}
+                                                        onChangeText={setEditTitle}
+                                                    />
+                                                    {editTitle.length > 0 && (
+                                                        <TouchableOpacity
+                                                            style={{ position: 'absolute', right: 10, top: 10 }}
+                                                            onPress={() => setEditTitle('')}
+                                                        >
+                                                            <Ionicons name="close-circle" size={20} color="#aaa" />
+                                                        </TouchableOpacity>
+                                                    )}
+                                                </View>
                                             </View>
 
                                             <View style={stylesDetailedItemListing.formGroup}>
                                                 <Text style={stylesDetailedItemListing.formLabel}>Description</Text>
-                                                <TextInput
-                                                    style={stylesDetailedItemListing.claimInput}
-                                                    multiline
-                                                    numberOfLines={4}
-                                                    placeholder="Describe your item..."
-                                                    value={editDescription}
-                                                    onChangeText={setEditDescription}
-                                                />
+                                                <View style={{ position: 'relative' }}>
+                                                    <TextInput
+                                                        style={stylesDetailedItemListing.claimInput}
+                                                        multiline
+                                                        numberOfLines={4}
+                                                        placeholder="Describe your item..."
+                                                        value={editDescription}
+                                                        onChangeText={setEditDescription}
+                                                    />
+                                                    {editDescription.length > 0 && (
+                                                        <TouchableOpacity
+                                                            style={{ position: 'absolute', right: 10, top: 10 }}
+                                                            onPress={() => setEditDescription('')}
+                                                        >
+                                                            <Ionicons name="close-circle" size={20} color="#aaa" />
+                                                        </TouchableOpacity>
+                                                    )}
+                                                </View>
                                             </View>
 
                                             <View style={stylesDetailedItemListing.formGroup}>
