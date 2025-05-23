@@ -5,15 +5,29 @@ const User = require('../models/User');
 const { upload, uploadToCloudinary, deleteFromCloudinary } = require('../utils/uploadUtils');
 const { validateOwnership, validateRequiredFields } = require('../middleware/validators');
 
-// Get user's listings
-router.get('/my-listings', async (req, res) => {
+// Get user's listings - Using a more specific path
+router.get('/user/my-listings', async (req, res) => {
   try {
+    console.log('Fetching listings for user:', req.user.userId);
+    
+    if (!req.user || !req.user.userId) {
+      console.error('No user ID found in request');
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+
     const listings = await Listing.find({ userId: req.user.userId })
       .populate('userId', 'name username')
       .sort({ createdAt: -1 });
+    
+    console.log(`Found ${listings.length} listings for user`);
     res.json(listings);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching user listings', error: error.message });
+    console.error('Error in my-listings route:', error);
+    res.status(500).json({ 
+      message: 'Error fetching user listings', 
+      error: error.message,
+      details: error.stack 
+    });
   }
 });
 
@@ -93,7 +107,7 @@ router.post('/', upload.array('images', 5), async (req, res) => {
   }
 });
 
-// Get a specific listing
+// Get a specific listing - This must come AFTER specific routes
 router.get('/:id', async (req, res) => {
   try {
     const listing = await Listing.findById(req.params.id);

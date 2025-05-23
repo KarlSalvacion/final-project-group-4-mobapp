@@ -7,6 +7,7 @@ import {
     Image,
     ActivityIndicator,
     Alert,
+    RefreshControl,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
@@ -41,13 +42,27 @@ const MyListingsScreen = () => {
     const [listings, setListings] = useState<Listing[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [refreshing, setRefreshing] = useState(false);
 
     const fetchListings = async () => {
         try {
             setIsLoading(true);
             setError(null);
 
-            const response = await fetch(`${BACKEND_BASE_URL}/api/listings/my-listings`, {
+            if (!token) {
+                throw new Error('No authentication token found');
+            }
+
+            console.log('Fetching listings with token:', token.substring(0, 20) + '...');
+            console.log('API URL:', `${BACKEND_BASE_URL}/api/listings/user/my-listings`);
+
+            // First check if the server is running
+            const healthCheck = await fetch(`${BACKEND_BASE_URL}/api/health`);
+            if (!healthCheck.ok) {
+                throw new Error('Server is not responding');
+            }
+
+            const response = await fetch(`${BACKEND_BASE_URL}/api/listings/user/my-listings`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -55,12 +70,21 @@ const MyListingsScreen = () => {
                 },
             });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to fetch listings');
+            console.log('Response status:', response.status);
+            console.log('Response headers:', response.headers);
+
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error(`Expected JSON response but got ${contentType}`);
             }
 
             const data = await response.json();
+            console.log('Response data:', data);
+
+            if (!response.ok) {
+                throw new Error(data.message || data.error || 'Failed to fetch listings');
+            }
+
             setListings(data);
         } catch (err) {
             console.error('Error fetching listings:', err);
@@ -69,6 +93,12 @@ const MyListingsScreen = () => {
             setIsLoading(false);
         }
     };
+
+    const onRefresh = React.useCallback(async () => {
+        setRefreshing(true);
+        await fetchListings();
+        setRefreshing(false);
+    }, []);
 
     useEffect(() => {
         fetchListings();
@@ -129,6 +159,14 @@ const MyListingsScreen = () => {
             <ScrollView 
                 style={stylesMyListingsScreen.scrollView}
                 contentContainerStyle={stylesMyListingsScreen.contentContainer}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        colors={['rgb(25, 153, 100)']}
+                        tintColor="rgb(25, 153, 100)"
+                    />
+                }
             >
                 <Text style={stylesMyListingsScreen.sectionTitle}>My Listings</Text>
 

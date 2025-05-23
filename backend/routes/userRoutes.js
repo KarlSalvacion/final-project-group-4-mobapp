@@ -22,7 +22,7 @@ router.get('/check-token', async (req, res) => {
         res.json({
             tokenContents: decoded,
             userData: {
-                id: user._id,
+                _id: user._id,
                 username: user.username,
                 email: user.email,
                 name: user.name,
@@ -73,7 +73,7 @@ router.post('/register', async (req, res) => {
 
     // Log the user object for debugging
     console.log('Created user:', {
-      id: user._id,
+      _id: user._id,
       username: user.username,
       email: user.email,
       name: user.name,
@@ -83,11 +83,12 @@ router.post('/register', async (req, res) => {
     res.status(201).json({ 
       token,
       user: {
-        id: user._id,
+        _id: user._id,
         username: user.username,
         email: user.email,
         name: user.name,
-        role: user.role
+        role: user.role,
+        createdAt: user.createdAt
       }
     });
   } catch (error) {
@@ -101,19 +102,24 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // Validate input
     if (!email || !password) {
       return res.status(400).json({ message: 'Email and password are required' });
+    }
+
+    if (!email.includes('@')) {
+      return res.status(400).json({ message: 'Please enter a valid email address' });
     }
 
     // Find user
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).json({ message: 'Invalid email or password' });
+      return res.status(401).json({ message: 'Invalid email or password' });
     }
 
     // Check password (Note: In production, use proper password comparison)
     if (user.password !== password) {
-      return res.status(400).json({ message: 'Invalid email or password' });
+      return res.status(401).json({ message: 'Invalid email or password' });
     }
 
     // Create token with role
@@ -126,23 +132,15 @@ router.post('/login', async (req, res) => {
       { expiresIn: authConfig.JWT_EXPIRES_IN }
     );
 
-    // Log the user object for debugging
-    console.log('Logged in user:', {
-      id: user._id,
-      username: user.username,
-      email: user.email,
-      name: user.name,
-      role: user.role
-    });
-
     res.json({ 
       token,
       user: {
-        id: user._id,
+        _id: user._id,
         username: user.username,
         email: user.email,
         name: user.name,
-        role: user.role
+        role: user.role,
+        createdAt: user.createdAt
       }
     });
   } catch (error) {

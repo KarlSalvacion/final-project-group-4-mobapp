@@ -108,11 +108,11 @@ export const stylesDetailedItemListing = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#ddd',
         borderRadius: 8,
-        padding: 12,
-        fontSize: 16,
-        minHeight: 120,
+        padding: 10,
+        fontSize: 14,
+        minHeight: 40,
         textAlignVertical: 'top',
-        marginBottom: 20,
+        marginBottom: 10,
     },
     modalButtons: {
         flexDirection: 'row',
@@ -216,6 +216,70 @@ export const stylesDetailedItemListing = StyleSheet.create({
     typeLost: {
         backgroundColor: 'rgba(255, 59, 48, 0.1)',
         color: 'rgb(255, 59, 48)',
+    },
+    headerActions: {
+        flexDirection: 'row',
+        gap: 10,
+        marginLeft: 'auto',
+    },
+    editButton: {
+        padding: 8,
+        borderRadius: 8,
+        backgroundColor: '#4a90e2',
+    },
+    deleteButton: {
+        padding: 8,
+        borderRadius: 8,
+        backgroundColor: '#e74c3c',
+    },
+    ownerButtonsContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 10,
+    },
+    formGroup: {
+        marginBottom: 20,
+    },
+    formLabel: {
+        fontSize: 16,
+        fontWeight: '500',
+        color: '#333',
+        marginBottom: 8,
+    },
+    formSubLabel: {
+        fontSize: 14,
+        color: '#666',
+        marginBottom: 10,
+    },
+    carouselItem: {
+        width: '100%',
+        height: 300,
+    },
+    carouselImage: {
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover',
+    },
+    paginationContainer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        position: 'absolute',
+        bottom: 10,
+        width: '100%',
+    },
+    paginationDot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        backgroundColor: 'rgba(0, 0, 0, 0.4)',
+        marginHorizontal: 4,
+    },
+    paginationDotActive: {
+        width: 10,
+        height: 10,
+        borderRadius: 5,
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
     },
 });
 

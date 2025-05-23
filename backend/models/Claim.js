@@ -30,6 +30,16 @@ const claimSchema = new mongoose.Schema({
             message: 'Cannot upload more than 3 proof images'
         }
     },
+    type: {
+        type: String,
+        enum: ['claim', 'found'],
+        default: 'claim'
+    },
+    notes: String,
+    approvedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    }
 }, {
     timestamps: true
 });

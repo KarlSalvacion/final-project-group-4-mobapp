@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, Image, TouchableOpacity, Alert, Modal, TextInput, ActivityIndicator, TouchableWithoutFeedback, Keyboard, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, ScrollView, Image, TouchableOpacity, Alert, Modal, TextInput, ActivityIndicator, TouchableWithoutFeedback, Keyboard, KeyboardAvoidingView, Platform, StyleSheet, Dimensions, FlatList } from 'react-native';
 import { stylesDetailedItemListing } from '../styles/StylesDetailedItemListing';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useListings } from '../context/ListingContext';
 import { useAuth } from '../context/AuthContext';
 import { BACKEND_BASE_URL } from '../config/apiConfig';
 import * as ImagePicker from 'expo-image-picker';
+import { Listing, Claim } from '../types';
 
 type RootStackParamList = {
     DetailedItemListing: { listingId: string };
@@ -15,19 +16,17 @@ type RootStackParamList = {
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
 
-interface Claim {
-    _id: string;
-    listingId: string;
-    status: 'pending' | 'approved' | 'rejected';
-}
-
 const DetailedItemListingScreen = () => {
     const navigation = useNavigation<NavigationProp>();
     const route = useRoute();
     const { listings } = useListings();
-    const { token } = useAuth();
+    const { token, user } = useAuth();
     const [isClaimModalVisible, setIsClaimModalVisible] = useState(false);
     const [isFoundModalVisible, setIsFoundModalVisible] = useState(false);
+    const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+    const [editTitle, setEditTitle] = useState('');
+    const [editDescription, setEditDescription] = useState('');
+    const [editImages, setEditImages] = useState<string[]>([]);
     const [claimExplanation, setClaimExplanation] = useState('');
     const [foundExplanation, setFoundExplanation] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -35,6 +34,8 @@ const DetailedItemListingScreen = () => {
     const [foundImages, setFoundImages] = useState<string[]>([]);
     const [userClaims, setUserClaims] = useState<Claim[]>([]);
     const [isLoadingClaims, setIsLoadingClaims] = useState(true);
+    const [activeSlide, setActiveSlide] = useState(0);
+    const { width: screenWidth } = Dimensions.get('window');
     
     // @ts-ignore - We know listingId exists in params
     const listingId = route.params?.listingId;
@@ -186,11 +187,17 @@ const DetailedItemListingScreen = () => {
             return;
         }
 
+        if (foundImages.length === 0) {
+            Alert.alert('Error', 'Please provide at least one image of the found item.');
+            return;
+        }
+
         try {
             setIsSubmitting(true);
             const formData = new FormData();
             formData.append('listingId', listing._id);
             formData.append('description', foundExplanation);
+            formData.append('type', 'found'); // Add type to distinguish from claims
 
             foundImages.forEach((uri, index) => {
                 const filename = uri.split('/').pop();
@@ -246,6 +253,188 @@ const DetailedItemListingScreen = () => {
         }
     };
 
+    // Add this function to check if user is the owner
+    const isUserOwner = () => {
+        console.log('User:', user);
+        console.log('Listing:', listing);
+        if (!user || !listing) return false;
+        const listingUserId = typeof listing.userId === 'object' ? listing.userId._id : listing.userId;
+        const userId = user._id || user.id; // Handle both _id and id
+        console.log('Listing User ID:', listingUserId);
+        console.log('Current User ID:', userId);
+        return String(listingUserId) === String(userId);
+    };
+
+    // Add this function to handle claim/found submission
+    const handleSubmit = async (isFound: boolean = false) => {
+        console.log('Handle Submit - User:', user);
+        console.log('Handle Submit - Token:', token);
+        
+        if (!user || (!user._id && !user.id)) {
+            Alert.alert(
+                'Error',
+                'Please log in to claim or report items.',
+                [{ text: 'OK' }]
+            );
+            return;
+        }
+
+        if (isUserOwner()) {
+            Alert.alert(
+                'Not Allowed',
+                'You cannot claim or report finding your own items.',
+                [{ text: 'OK' }]
+            );
+            return;
+        }
+
+        if (isFound) {
+            setIsFoundModalVisible(true);
+        } else {
+            setIsClaimModalVisible(true);
+        }
+    };
+
+    // Add this function to handle listing deletion
+    const handleDelete = async () => {
+        if (!listing) return;
+
+        Alert.alert(
+            'Delete Listing',
+            'Are you sure you want to delete this listing? This action cannot be undone.',
+            [
+                {
+                    text: 'Cancel',
+                    style: 'cancel'
+                },
+                {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            const response = await fetch(`${BACKEND_BASE_URL}/api/listings/${listing._id}`, {
+                                method: 'DELETE',
+                                headers: {
+                                    'Authorization': `Bearer ${token}`,
+                                },
+                            });
+
+                            if (!response.ok) {
+                                const errorData = await response.json();
+                                throw new Error(errorData.message || 'Failed to delete listing');
+                            }
+
+                            Alert.alert('Success', 'Listing deleted successfully');
+                            navigation.goBack();
+                        } catch (error) {
+                            Alert.alert(
+                                'Error',
+                                error instanceof Error ? error.message : 'Failed to delete listing'
+                            );
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
+    // Add this function to handle image upload in edit mode
+    const pickEditImage = async () => {
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 1,
+        });
+
+        if (!result.canceled && result.assets[0].uri) {
+            setEditImages([...editImages, result.assets[0].uri]);
+        }
+    };
+
+    const removeEditImage = (index: number) => {
+        setEditImages(editImages.filter((_, i) => i !== index));
+    };
+
+    // Update handleUpdate function
+    const handleUpdate = async () => {
+        if (!listing) return;
+
+        try {
+            setIsSubmitting(true);
+            const formData = new FormData();
+            
+            if (editTitle) formData.append('title', editTitle);
+            if (editDescription) formData.append('description', editDescription);
+
+            editImages.forEach((uri) => {
+                const filename = uri.split('/').pop();
+                const match = /\.(\w+)$/.exec(filename || '');
+                const type = match ? `image/${match[1]}` : 'image/jpeg';
+                
+                formData.append('images', {
+                    uri,
+                    name: filename,
+                    type,
+                } as any);
+            });
+
+            const response = await fetch(`${BACKEND_BASE_URL}/api/listings/${listing._id}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'multipart/form-data',
+                },
+                body: formData,
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to update listing');
+            }
+
+            Alert.alert('Success', 'Listing updated successfully');
+            setIsEditModalVisible(false);
+            navigation.goBack();
+        } catch (error) {
+            Alert.alert(
+                'Error',
+                error instanceof Error ? error.message : 'Failed to update listing'
+            );
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    // Update useEffect to set initial values when edit modal opens
+    useEffect(() => {
+        if (isEditModalVisible && listing) {
+            setEditTitle(listing.title);
+            setEditDescription(listing.description);
+            setEditImages(listing.images);
+        }
+    }, [isEditModalVisible, listing]);
+
+    const renderImage = ({ item }: { item: string }) => (
+        <View style={[stylesDetailedItemListing.carouselItem, { width: screenWidth }]}>
+            <Image 
+                source={{ uri: item }}
+                style={stylesDetailedItemListing.carouselImage}
+                resizeMode="cover"
+            />
+        </View>
+    );
+
+    const onViewableItemsChanged = useRef(({ viewableItems }: any) => {
+        if (viewableItems.length > 0) {
+            setActiveSlide(viewableItems[0].index);
+        }
+    }).current;
+
+    const viewabilityConfig = useRef({
+        itemVisiblePercentThreshold: 50
+    }).current;
+
     if (!listing) {
         return (
             <View style={stylesDetailedItemListing.mainContainer}>
@@ -270,10 +459,27 @@ const DetailedItemListingScreen = () => {
                 <ScrollView style={stylesDetailedItemListing.scrollContainer}>
                     {listing.images.length > 0 && (
                         <View style={stylesDetailedItemListing.imageContainer}>
-                            <Image 
-                                source={{ uri: listing.images[0] }}
-                                style={stylesDetailedItemListing.image}
+                            <FlatList
+                                data={listing.images}
+                                renderItem={renderImage}
+                                horizontal
+                                pagingEnabled
+                                showsHorizontalScrollIndicator={false}
+                                onViewableItemsChanged={onViewableItemsChanged}
+                                viewabilityConfig={viewabilityConfig}
+                                keyExtractor={(item, index) => index.toString()}
                             />
+                            <View style={stylesDetailedItemListing.paginationContainer}>
+                                {listing.images.map((_, index) => (
+                                    <View
+                                        key={index}
+                                        style={[
+                                            stylesDetailedItemListing.paginationDot,
+                                            index === activeSlide && stylesDetailedItemListing.paginationDotActive
+                                        ]}
+                                    />
+                                ))}
+                            </View>
                         </View>
                     )}
                     
@@ -292,7 +498,7 @@ const DetailedItemListingScreen = () => {
                         <View style={stylesDetailedItemListing.detailsContainer}>
                             <Ionicons name="person-outline" style={stylesDetailedItemListing.icon} />
                             <Text style={stylesDetailedItemListing.detailText}>
-                                Posted by {listing.userId?.name || 'Anonymous'}
+                                Posted by {listing.userId?.name || listing.userId?.username || 'Anonymous'}
                             </Text>
                         </View>
 
@@ -312,16 +518,20 @@ const DetailedItemListingScreen = () => {
                             <TouchableOpacity
                                 style={[
                                     stylesDetailedItemListing.claimButton,
-                                    (hasExistingClaim || isLoadingClaims) && stylesDetailedItemListing.claimButtonDisabled
+                                    (hasExistingClaim || isLoadingClaims || isUserOwner()) && stylesDetailedItemListing.claimButtonDisabled
                                 ]}
-                                onPress={() => setIsClaimModalVisible(true)}
-                                disabled={hasExistingClaim || isLoadingClaims}
+                                onPress={() => handleSubmit(false)}
+                                disabled={hasExistingClaim || isLoadingClaims || isUserOwner()}
                             >
                                 {isLoadingClaims ? (
                                     <ActivityIndicator color="#fff" />
                                 ) : (
                                     <Text style={stylesDetailedItemListing.claimButtonText}>
-                                        {hasExistingClaim ? 'Claim Pending' : 'Claim This Item'}
+                                        {isUserOwner() 
+                                            ? 'Cannot Claim Own Item' 
+                                            : hasExistingClaim 
+                                                ? 'Claim Pending' 
+                                                : 'Claim This Item'}
                                     </Text>
                                 )}
                             </TouchableOpacity>
@@ -329,19 +539,41 @@ const DetailedItemListingScreen = () => {
                             <TouchableOpacity
                                 style={[
                                     stylesDetailedItemListing.claimButton,
-                                    (hasExistingClaim || isLoadingClaims) && stylesDetailedItemListing.claimButtonDisabled
+                                    (hasExistingClaim || isLoadingClaims || isUserOwner()) && stylesDetailedItemListing.claimButtonDisabled
                                 ]}
-                                onPress={() => setIsFoundModalVisible(true)}
-                                disabled={hasExistingClaim || isLoadingClaims}
+                                onPress={() => handleSubmit(true)}
+                                disabled={hasExistingClaim || isLoadingClaims || isUserOwner()}
                             >
                                 {isLoadingClaims ? (
                                     <ActivityIndicator color="#fff" />
                                 ) : (
                                     <Text style={stylesDetailedItemListing.claimButtonText}>
-                                        {hasExistingClaim ? 'Found Pending' : 'I Found This Item'}
+                                        {isUserOwner() 
+                                            ? 'Cannot Report Own Item' 
+                                            : hasExistingClaim 
+                                                ? 'Found Pending' 
+                                                : 'I Found This Item'}
                                     </Text>
                                 )}
                             </TouchableOpacity>
+                        )}
+
+                        {isUserOwner() && (
+                            <View style={stylesDetailedItemListing.ownerButtonsContainer}>
+                                <TouchableOpacity
+                                    style={[stylesDetailedItemListing.claimButton, { flex: 1, marginRight: 5 }]}
+                                    onPress={() => setIsEditModalVisible(true)}
+                                >
+                                    <Text style={stylesDetailedItemListing.claimButtonText}>Edit</Text>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    style={[stylesDetailedItemListing.claimButton, { flex: 1, marginLeft: 5, backgroundColor: '#e74c3c' }]}
+                                    onPress={handleDelete}
+                                >
+                                    <Text style={stylesDetailedItemListing.claimButtonText}>Delete</Text>
+                                </TouchableOpacity>
+                            </View>
                         )}
                     </View>
                 </ScrollView>
@@ -545,10 +777,123 @@ const DetailedItemListingScreen = () => {
                         </View>
                     </TouchableWithoutFeedback>
                 </Modal>
+
+                {/* Edit Modal */}
+                <Modal
+                    visible={isEditModalVisible}
+                    transparent={true}
+                    animationType="slide"
+                    onRequestClose={() => setIsEditModalVisible(false)}
+                >
+                    <TouchableWithoutFeedback onPress={() => {
+                        Keyboard.dismiss();
+                        setIsEditModalVisible(false);
+                    }}>
+                        <View style={stylesDetailedItemListing.modalContainer}>
+                            <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+                                <KeyboardAvoidingView 
+                                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                                    style={stylesDetailedItemListing.modalContent}
+                                >
+                                    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                                        <View>
+                                            <Text style={stylesDetailedItemListing.modalTitle}>Edit Listing</Text>
+                                            <Text style={stylesDetailedItemListing.modalSubtitle}>
+                                                Update your listing details below
+                                            </Text>
+                                            
+                                            <View style={stylesDetailedItemListing.formGroup}>
+                                                <Text style={stylesDetailedItemListing.formLabel}>Title</Text>
+                                                <TextInput
+                                                    style={stylesDetailedItemListing.claimInput}
+                                                    placeholder="Enter item title"
+                                                    value={editTitle}
+                                                    onChangeText={setEditTitle}
+                                                />
+                                            </View>
+
+                                            <View style={stylesDetailedItemListing.formGroup}>
+                                                <Text style={stylesDetailedItemListing.formLabel}>Description</Text>
+                                                <TextInput
+                                                    style={stylesDetailedItemListing.claimInput}
+                                                    multiline
+                                                    numberOfLines={4}
+                                                    placeholder="Describe your item..."
+                                                    value={editDescription}
+                                                    onChangeText={setEditDescription}
+                                                />
+                                            </View>
+
+                                            <View style={stylesDetailedItemListing.formGroup}>
+                                                <Text style={stylesDetailedItemListing.formLabel}>Images</Text>
+                                                <Text style={stylesDetailedItemListing.formSubLabel}>
+                                                    Add up to 3 images of your item
+                                                </Text>
+                                                <TouchableOpacity
+                                                    style={stylesDetailedItemListing.imageUploadButton}
+                                                    onPress={pickEditImage}
+                                                    disabled={editImages.length >= 3}
+                                                >
+                                                    <Ionicons name="camera" size={24} color="#fff" />
+                                                    <Text style={stylesDetailedItemListing.imageUploadButtonText}>
+                                                        Add Image
+                                                    </Text>
+                                                </TouchableOpacity>
+
+                                                <View style={stylesDetailedItemListing.imagePreviewContainer}>
+                                                    {editImages.map((uri, index) => (
+                                                        <View key={index} style={stylesDetailedItemListing.imagePreviewWrapper}>
+                                                            <Image
+                                                                source={{ uri }}
+                                                                style={stylesDetailedItemListing.imagePreview}
+                                                            />
+                                                            <TouchableOpacity
+                                                                style={stylesDetailedItemListing.removeImageButton}
+                                                                onPress={() => removeEditImage(index)}
+                                                            >
+                                                                <Ionicons name="close-circle" size={24} color="#fff" />
+                                                            </TouchableOpacity>
+                                                        </View>
+                                                    ))}
+                                                </View>
+                                            </View>
+
+                                            <View style={stylesDetailedItemListing.modalButtons}>
+                                                <TouchableOpacity
+                                                    style={[stylesDetailedItemListing.modalButton, stylesDetailedItemListing.cancelButton]}
+                                                    onPress={() => {
+                                                        setIsEditModalVisible(false);
+                                                        setEditTitle('');
+                                                        setEditDescription('');
+                                                        setEditImages([]);
+                                                    }}
+                                                    disabled={isSubmitting}
+                                                >
+                                                    <Text style={stylesDetailedItemListing.modalCancelButtonText}>Cancel</Text>
+                                                </TouchableOpacity>
+
+                                                <TouchableOpacity
+                                                    style={[stylesDetailedItemListing.modalButton, stylesDetailedItemListing.submitButton]}
+                                                    onPress={handleUpdate}
+                                                    disabled={isSubmitting}
+                                                >
+                                                    {isSubmitting ? (
+                                                        <ActivityIndicator color="#fff" />
+                                                    ) : (
+                                                        <Text style={stylesDetailedItemListing.modalButtonText}>Save Changes</Text>
+                                                    )}
+                                                </TouchableOpacity>
+                                            </View>
+                                        </View>
+                                    </TouchableWithoutFeedback>
+                                </KeyboardAvoidingView>
+                            </TouchableWithoutFeedback>
+                        </View>
+                    </TouchableWithoutFeedback>
+                </Modal>
             </View>
         </TouchableWithoutFeedback>
     );
 };
 
 export default DetailedItemListingScreen;
-

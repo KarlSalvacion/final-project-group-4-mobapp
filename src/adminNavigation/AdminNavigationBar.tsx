@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AdminDashboard from '../adminScreens/AdminDashboard';
 import AdminListingPage from '../adminScreens/AdminListingPage';
 import AdminTicketPage from '../adminScreens/AdminTicketPage';
+import AdminUserPage from '../adminScreens/AdminUserPage';
 import { StyleSheet } from 'react-native';
 
 const Tab = createBottomTabNavigator();
@@ -34,6 +35,8 @@ export default function AdminNavigationBar() {
                         iconName = focused ? 'ticket' : 'ticket-outline';
                     } else if (route.name === 'Listings') {
                         iconName = focused ? 'list' : 'list-outline';
+                    } else if (route.name === 'Users') {
+                        iconName = focused ? 'people' : 'people-outline';
                     } else {
                         iconName = 'alert-circle';
                     }
@@ -49,6 +52,7 @@ export default function AdminNavigationBar() {
             <Tab.Screen name="Dashboard" component={AdminDashboard} />
             <Tab.Screen name="Tickets" component={AdminTicketPage} />
             <Tab.Screen name="Listings" component={AdminListingPage} />
+            <Tab.Screen name="Users" component={AdminUserPage} />
         </Tab.Navigator>
     );
 }
