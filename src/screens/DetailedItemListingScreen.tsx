@@ -21,7 +21,7 @@ const DetailedItemListingScreen = () => {
     const navigation = useNavigation<NavigationProp>();
     const route = useRoute();
     const { listings } = useListings();
-    const { token, user } = useAuth();
+    const { token, user, validateToken } = useAuth();
     const [isClaimModalVisible, setIsClaimModalVisible] = useState(false);
     const [isFoundModalVisible, setIsFoundModalVisible] = useState(false);
     const [isEditModalVisible, setIsEditModalVisible] = useState(false);
@@ -175,154 +175,146 @@ const DetailedItemListingScreen = () => {
 
     const handleClaim = async () => {
         if (!listing) {
-            Alert.alert('Error', 'Listing not found.');
+            Alert.alert('Error', 'Listing not found');
             return;
         }
 
         if (!claimExplanation.trim()) {
-            Alert.alert('Error', 'Please provide an explanation for your claim.');
+            Alert.alert('Error', 'Please provide an explanation for your claim');
             return;
         }
 
-        // Only require images for found items
-        if (listing.type === 'found' && proofImages.length === 0) {
-            Alert.alert('Error', 'Please provide at least one proof image.');
+        if (proofImages.length === 0) {
+            Alert.alert('Error', 'Please provide at least one proof image');
             return;
         }
 
         try {
-            setIsSubmitting(true);
+            if (!token) {
+                throw new Error('No authentication token found');
+            }
+
+            // Validate token before proceeding
+            const isValid = await validateToken(token);
+            if (!isValid) {
+                throw new Error('Invalid or expired session');
+            }
+
             const formData = new FormData();
             formData.append('listingId', listing._id);
             formData.append('description', claimExplanation);
             formData.append('type', 'claim');
 
-            console.log('Proof Images:', proofImages);
-
-            // Handle images
-            for (const uri of proofImages) {
-                const filename = uri.split('/').pop() || 'image.jpg';
-                const match = /\.(\w+)$/.exec(filename);
-                const type = match ? `image/${match[1]}` : 'image/jpeg';
-                
+            proofImages.forEach((image, index) => {
+                const uri = Platform.OS === 'ios' ? image.replace('file://', '') : image;
                 formData.append('proofImages', {
-                    uri: Platform.OS === 'android' ? uri : uri.replace('file://', ''),
-                    type,
-                    name: filename,
+                    uri,
+                    type: 'image/jpeg',
+                    name: `proof_${index}.jpg`
                 } as any);
-            }
-
-            console.log('FormData contents:');
-            console.log('- listingId:', listing._id);
-            console.log('- description:', claimExplanation);
-            console.log('- type: claim');
-            console.log('- proofImages:', proofImages.length, 'images');
+            });
 
             const response = await fetch(`${BACKEND_BASE_URL}/api/claims`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
                 },
-                body: formData,
+                body: formData
             });
 
-            console.log('Response status:', response.status);
             const responseData = await response.json();
-            console.log('Response data:', responseData);
 
             if (!response.ok) {
+                if (response.status === 401) {
+                    // Token might be invalid, try to validate it
+                    const isValid = await validateToken(token);
+                    if (!isValid) {
+                        Alert.alert('Session Expired', 'Please log in again');
+                        // You might want to trigger a logout here
+                        return;
+                    }
+                }
                 throw new Error(responseData.message || 'Failed to submit claim');
             }
 
-            setUserClaims([...userClaims, responseData]);
-
-            Alert.alert(
-                'Success',
-                'Your claim has been submitted successfully. The owner will review your claim.',
-                [
-                    {
-                        text: 'OK',
-                        onPress: () => {
-                            setIsClaimModalVisible(false);
-                            setClaimExplanation('');
-                            setProofImages([]);
-                            navigation.goBack();
-                        }
-                    }
-                ]
-            );
+            Alert.alert('Success', 'Claim submitted successfully');
+            setIsClaimModalVisible(false);
+            setClaimExplanation('');
+            setProofImages([]);
         } catch (error) {
             console.error('Error submitting claim:', error);
-            Alert.alert(
-                'Error',
-                error instanceof Error ? error.message : 'Failed to submit claim. Please try again.'
-            );
-        } finally {
-            setIsSubmitting(false);
+            Alert.alert('Error', error instanceof Error ? error.message : 'Failed to submit claim');
         }
     };
 
     const handleFound = async () => {
         if (!listing) {
-            Alert.alert('Error', 'Listing not found.');
+            Alert.alert('Error', 'Listing not found');
             return;
         }
 
         if (!foundExplanation.trim()) {
-            Alert.alert('Error', 'Please provide details about where you found the item.');
+            Alert.alert('Error', 'Please provide details about where you found the item');
             return;
         }
 
         if (foundImages.length === 0) {
-            Alert.alert('Error', 'Please provide at least one image of the found item.');
+            Alert.alert('Error', 'Please provide at least one image of the found item');
             return;
         }
 
         try {
             setIsSubmitting(true);
+            if (!token) {
+                throw new Error('No authentication token found');
+            }
+
+            // Validate token before proceeding
+            const isValid = await validateToken(token);
+            if (!isValid) {
+                throw new Error('Invalid or expired session');
+            }
+
             const formData = new FormData();
             formData.append('listingId', listing._id);
             formData.append('description', foundExplanation);
             formData.append('type', 'found');
 
-            console.log('Found Images:', foundImages);
-
-            // Handle images
-            for (const uri of foundImages) {
-                const filename = uri.split('/').pop() || 'image.jpg';
+            foundImages.forEach((image, index) => {
+                const uri = Platform.OS === 'ios' ? image.replace('file://', '') : image;
+                const filename = uri.split('/').pop() || `found_${index}.jpg`;
                 const match = /\.(\w+)$/.exec(filename);
                 const type = match ? `image/${match[1]}` : 'image/jpeg';
                 
                 formData.append('proofImages', {
-                    uri: Platform.OS === 'android' ? uri : uri.replace('file://', ''),
+                    uri,
                     type,
-                    name: filename,
+                    name: filename
                 } as any);
-            }
-
-            console.log('FormData contents:');
-            console.log('- listingId:', listing._id);
-            console.log('- description:', foundExplanation);
-            console.log('- type: found');
-            console.log('- proofImages:', foundImages.length, 'images');
+            });
 
             const response = await fetch(`${BACKEND_BASE_URL}/api/claims`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
                 },
-                body: formData,
+                body: formData
             });
 
-            console.log('Response status:', response.status);
             const responseData = await response.json();
-            console.log('Response data:', responseData);
 
             if (!response.ok) {
+                if (response.status === 401) {
+                    // Token might be invalid, try to validate it
+                    const isValid = await validateToken(token);
+                    if (!isValid) {
+                        Alert.alert('Session Expired', 'Please log in again');
+                        // You might want to trigger a logout here
+                        return;
+                    }
+                }
                 throw new Error(responseData.message || 'Failed to submit found item');
             }
-
-            setUserClaims([...userClaims, responseData]);
 
             Alert.alert(
                 'Success',
@@ -341,10 +333,7 @@ const DetailedItemListingScreen = () => {
             );
         } catch (error) {
             console.error('Error submitting found item:', error);
-            Alert.alert(
-                'Error',
-                error instanceof Error ? error.message : 'Failed to submit found item. Please try again.'
-            );
+            Alert.alert('Error', error instanceof Error ? error.message : 'Failed to submit found item');
         } finally {
             setIsSubmitting(false);
         }

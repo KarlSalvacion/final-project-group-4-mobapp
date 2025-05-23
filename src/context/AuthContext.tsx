@@ -10,6 +10,7 @@ interface AuthContextType {
     login: (email: string, userData: User, token: string) => Promise<void>;
     logout: () => Promise<void>;
     isLoading: boolean;
+    validateToken: (token: string) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -27,7 +28,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     'Authorization': `Bearer ${token}`,
                 },
             });
-            return response.ok;
+            
+            if (!response.ok) {
+                console.error('Token validation failed:', await response.text());
+                return false;
+            }
+            
+            const data = await response.json();
+            return data.userData && data.userData._id;
         } catch (error) {
             console.error('Error validating token:', error);
             return false;
@@ -45,11 +53,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     const isValid = await validateToken(storedToken);
                     const parsedUserData = JSON.parse(storedUserData);
                     
-                    if (isValid && parsedUserData && parsedUserData.name && parsedUserData.role) {
+                    if (isValid && parsedUserData && parsedUserData._id) {
                         setToken(storedToken);
                         setUser(parsedUserData);
                         setIsAuthenticated(true);
                     } else {
+                        console.log('Invalid stored auth data, logging out');
                         await logout();
                     }
                 }
@@ -66,8 +75,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const login = async (email: string, userData: User, token: string) => {
         try {
-            if (!userData.name || !userData.role) {
+            if (!userData._id) {
                 throw new Error('Invalid user data');
+            }
+            
+            // Validate token before storing
+            const isValid = await validateToken(token);
+            if (!isValid) {
+                throw new Error('Invalid token');
             }
             
             setIsAuthenticated(true);
@@ -96,7 +111,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     return (
-        <AuthContext.Provider value={{ isAuthenticated, user, token, login, logout, isLoading }}>
+        <AuthContext.Provider value={{ isAuthenticated, user, token, login, logout, isLoading, validateToken }}>
             {children}
         </AuthContext.Provider>
     );
