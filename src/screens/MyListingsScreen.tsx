@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
     View,
     Text,
-    ScrollView,
     TouchableOpacity,
     Image,
     ActivityIndicator,
     Alert,
     RefreshControl,
+    FlatList,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
@@ -44,6 +44,7 @@ const MyListingsScreen = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [refreshing, setRefreshing] = useState(false);
+    const flatListRef = useRef<FlatList>(null);
 
     const fetchListings = async () => {
         try {
@@ -118,6 +119,10 @@ const MyListingsScreen = () => {
         });
     };
 
+    const scrollToTop = () => {
+        flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+    };
+
     if (isLoading) {
         return (
             <View style={stylesMyListingsScreen.mainContainer}>
@@ -151,14 +156,26 @@ const MyListingsScreen = () => {
 
     return (
         <View style={stylesMyListingsScreen.mainContainer}>
-            <View style={stylesMyListingsScreen.headerContainer}>
+            <TouchableOpacity 
+                style={stylesMyListingsScreen.headerContainer}
+                onPress={scrollToTop}
+                activeOpacity={1}
+            >
                 <View style={stylesMyListingsScreen.headerContent}>
                     <Text style={stylesMyListingsScreen.headerTitle}>My Listings</Text>
                 </View>
-            </View>
+            </TouchableOpacity>
 
-            <ScrollView 
-                style={stylesMyListingsScreen.scrollView}
+            <FlatList
+                ref={flatListRef}
+                data={listings}
+                keyExtractor={(item) => item._id}
+                renderItem={({ item }) => (
+                    <ListingCard
+                        listing={item as any}
+                        onPress={() => handleListingPress(item._id)}
+                    />
+                )}
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={stylesMyListingsScreen.contentContainer}
                 refreshControl={
@@ -169,24 +186,15 @@ const MyListingsScreen = () => {
                         tintColor="rgb(25, 153, 100)"
                     />
                 }
-            >
-                {listings.length === 0 ? (
+                ListEmptyComponent={
                     <View style={stylesMyListingsScreen.emptyContainer}>
                         <Ionicons name="document-text-outline" size={50} color="#666" />
                         <Text style={stylesMyListingsScreen.emptyText}>
                             You haven't created any listings yet.
                         </Text>
                     </View>
-                ) : (
-                    listings.map((listing) => (
-                        <ListingCard
-                            key={listing._id}
-                            listing={listing as any}
-                            onPress={() => handleListingPress(listing._id)}
-                        />
-                    ))
-                )}
-            </ScrollView>
+                }
+            />
         </View>
     );
 };

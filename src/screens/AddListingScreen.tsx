@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, TextInput, Image, ScrollView, TouchableWithoutFeedback, Keyboard, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, Image, ScrollView, TouchableWithoutFeedback, Keyboard, Alert, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { stylesAddListingScreen } from '../styles/StylesAddListingScreen';
 import { useNavigation } from '@react-navigation/native';
@@ -56,6 +56,7 @@ const AddListingScreen = () => {
     const [locationPermission, setLocationPermission] = useState<boolean | null>(null);
     const [tempDate, setTempDate] = useState<Date>(new Date());
     const [tempTime, setTempTime] = useState<Date>(new Date());
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const formRef = useRef<any>(null);
 
     useEffect(() => {
@@ -122,6 +123,7 @@ const AddListingScreen = () => {
         }
 
         try {
+            setIsSubmitting(true);
             // Create FormData for multipart/form-data
             const formData = new FormData();
             
@@ -169,6 +171,8 @@ const AddListingScreen = () => {
                 "Error",
                 error instanceof Error ? error.message : "Failed to create listing. Please try again."
             );
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -368,6 +372,7 @@ const AddListingScreen = () => {
                                                 <TextInput
                                                     style={stylesAddListingScreen.input}
                                                     placeholder="Name"
+                                                    placeholderTextColor={"#999"}
                                                     value={values.title}
                                                     onChangeText={handleChange('title')}
                                                     onBlur={handleBlur('title')}
@@ -391,6 +396,7 @@ const AddListingScreen = () => {
                                                     multiline={true}
                                                     numberOfLines={6}
                                                     placeholder="Description"
+                                                    placeholderTextColor={"#999"}
                                                     value={values.description}
                                                     onChangeText={handleChange('description')}
                                                     onBlur={handleBlur('description')}
@@ -573,10 +579,21 @@ const AddListingScreen = () => {
                                         </View>
 
                                         <TouchableOpacity
-                                            style={stylesAddListingScreen.submitButton}
+                                            style={[
+                                                stylesAddListingScreen.submitButton,
+                                                isSubmitting && stylesAddListingScreen.submitButtonDisabled
+                                            ]}
                                             onPress={() => handleSubmit()}
+                                            disabled={isSubmitting}
                                         >
-                                            <Text style={stylesAddListingScreen.submitButtonText}>Submit</Text>
+                                            {isSubmitting ? (
+                                                <View style={stylesAddListingScreen.submitButtonContent}>
+                                                    <ActivityIndicator size="small" color="#fff" />
+                                                    <Text style={stylesAddListingScreen.submitButtonText}>Processing...</Text>
+                                                </View>
+                                            ) : (
+                                                <Text style={stylesAddListingScreen.submitButtonText}>Submit</Text>
+                                            )}
                                         </TouchableOpacity>
                                     </View>
                                 );

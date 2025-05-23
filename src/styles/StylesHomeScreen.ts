@@ -29,6 +29,7 @@ export const stylesHomeScreen = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'flex-start',
         alignItems: 'center',
+        flex: 1,
     },
     headerLogo: {
         resizeMode: 'contain',
@@ -81,6 +82,10 @@ export const stylesHomeScreen = StyleSheet.create({
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
+        alignItems: 'center',
+    },
+    loadingMoreContainer: {
+        paddingVertical: 20,
         alignItems: 'center',
     },
     errorContainer: {

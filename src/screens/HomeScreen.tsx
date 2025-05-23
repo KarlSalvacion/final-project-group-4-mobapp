@@ -26,7 +26,7 @@ const SEARCH_DEBOUNCE_DELAY = 300; // 300ms delay
 
 const HomeScreen = () => {
     const navigation = useNavigation<NavigationProp>();
-    const { listings, isLoading, error, fetchListings } = useListings();
+    const { listings, isLoading, error, fetchListings, hasMore, currentPage } = useListings();
     const [refreshing, setRefreshing] = useState(false);
     const [activeFilter, setActiveFilter] = useState<FilterType>('all');
     const [searchQuery, setSearchQuery] = useState('');
@@ -53,19 +53,16 @@ const HomeScreen = () => {
     });
 
     const filteredListings = useMemo(() => {
-        // First, ensure unique listings by ID
         const uniqueListings = Array.from(
             new Map(listings.map(listing => [listing._id, listing])).values()
         );
         
         let filtered = uniqueListings;
         
-        // Apply type filter
         if (activeFilter !== 'all') {
             filtered = filtered.filter(listing => listing.type === activeFilter);
         }
         
-        // Apply search filter (only on title)
         if (debouncedSearchQuery.trim()) {
             const query = debouncedSearchQuery.toLowerCase().trim();
             filtered = filtered.filter(listing => 
@@ -82,8 +79,14 @@ const HomeScreen = () => {
 
     const onRefresh = async () => {
         setRefreshing(true);
-        await fetchListings();
+        await fetchListings(1); 
         setRefreshing(false);
+    };
+
+    const loadMoreListings = async () => {
+        if (!isLoading && hasMore) {
+            await fetchListings(currentPage + 1);
+        }
     };
 
     const scrollToTop = () => {
@@ -103,7 +106,11 @@ const HomeScreen = () => {
                     minHeight: HEADER_MIN_HEIGHT,
                 }
             ]}>
-                <Animated.View style={stylesHomeScreen.headerContent}>
+                <TouchableOpacity 
+                    style={stylesHomeScreen.headerContent}
+                    onPress={scrollToTop}
+                    activeOpacity={1}
+                >
                     <Animated.Image 
                         source={require('../assets/looke_logo.png')}
                         style={[
@@ -115,7 +122,7 @@ const HomeScreen = () => {
                         ]}
                         resizeMode="contain"
                     />
-                </Animated.View>
+                </TouchableOpacity>
                 <TouchableOpacity 
                     style={stylesHomeScreen.profileButton}
                     onPress={() => navigation.navigate('Profile')}
@@ -187,6 +194,15 @@ const HomeScreen = () => {
                                 colors={['rgb(25, 153, 100)']}
                                 tintColor="rgb(25, 153, 100)"
                             />
+                        }
+                        onEndReached={loadMoreListings}
+                        onEndReachedThreshold={0.5}
+                        ListFooterComponent={
+                            isLoading && !refreshing ? (
+                                <View style={stylesHomeScreen.loadingMoreContainer}>
+                                    <ActivityIndicator size="small" color="rgb(25, 153, 100)" />
+                                </View>
+                            ) : null
                         }
                         onScroll={Animated.event(
                             [{ nativeEvent: { contentOffset: { y: scrollY } } }],

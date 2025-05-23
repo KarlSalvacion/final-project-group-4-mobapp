@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TextInput, TouchableOpacity, StyleSheet, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 interface SearchBarProps {
@@ -11,26 +11,28 @@ interface SearchBarProps {
 
 const SearchBar = ({ value, onChangeText, onClear, placeholder = 'Search items...' }: SearchBarProps) => {
     return (
-        <View style={styles.container}>
-            <View style={styles.searchContainer}>
-                <Ionicons name="search" size={20} color="#666" style={styles.searchIcon} />
-                <TextInput
-                    style={styles.input}
-                    value={value}
-                    onChangeText={onChangeText}
-                    placeholder={placeholder}
-                    placeholderTextColor="#999"
-                    returnKeyType="search"
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                />
-                {value.length > 0 && (
-                    <TouchableOpacity onPress={onClear} style={styles.clearButton}>
-                        <Ionicons name="close-circle" size={20} color="#666" />
-                    </TouchableOpacity>
-                )}
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.container}>
+                <View style={styles.searchContainer}>
+                    <Ionicons name="search" size={20} color="#666" style={styles.searchIcon} />
+                    <TextInput
+                        style={styles.input}
+                        value={value}
+                        onChangeText={onChangeText}
+                        placeholder={placeholder}
+                        placeholderTextColor="#999"
+                        returnKeyType="search"
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                    />
+                    {value.length > 0 && (
+                        <TouchableOpacity onPress={onClear} style={styles.clearButton}>
+                            <Ionicons name="close-circle" size={20} color="#666" />
+                        </TouchableOpacity>
+                    )}
+                </View>
             </View>
-        </View>
+        </TouchableWithoutFeedback>
     );
 };
 

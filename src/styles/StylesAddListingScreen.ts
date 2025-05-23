@@ -234,6 +234,16 @@ export const stylesAddListingScreen = StyleSheet.create({
         justifyContent: 'center',
     },
 
+    submitButtonDisabled: {
+        opacity: 0.7,
+    },
+
+    submitButtonContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+    },
+
     submitButtonText: {
         color: '#fff',
         fontSize: 16,
